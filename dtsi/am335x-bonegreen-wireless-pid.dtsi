@@ -1,0 +1,24 @@
+/*
+ * Copyright (C) 2016 Texas Instruments Incorporated - http://www.ti.com/
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+
+&am33xx_pinmux {
+	pru_cape_bone_pins: pru_cape_bone_pins {
+		pinctrl-single,pins = <
+		
+			0x164 (PIN_OUTPUT_PULLDOWN | MUX_MODE3) /* ECAP PWM      P9->42 */
+ 
+			0x0D0 (PIN_INPUT_PULLDOWN | MUX_MODE2)  /* eQEP1A_in     P8->35 */
+			0x0D4 (PIN_INPUT_PULLDOWN | MUX_MODE2)  /* eQEP1B_in     P8->33 */
+		>;
+	};
+};
+
+&pruss {
+        pinctrl-names = "default";
+	pinctrl-0 = <&pru_cape_bone_pins>;
+};
