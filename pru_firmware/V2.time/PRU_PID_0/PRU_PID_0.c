@@ -53,7 +53,8 @@ struct pid_data {
     int int_err;
     int input, output, last_output;
     int min_output, max_output;
-	int min, med, max, sum;
+    int min, med, max;
+    unsigned int sum;
 };												// Estas estructuras son compartidas entre las PRUs,
 												// y así se forma la comunicación entre ambas.
 /* Estructura del bloque de memoria compartida */
@@ -127,13 +128,13 @@ void main(void) {
 void update_pid(volatile struct pid_data* pid) {
     unsigned int p_f, d_f;
     int output_f, output, cycles;
-	cycles = 0;
-	
-	/* Inicio del conteo de ciclo del segmento de código */
-	PRU0_CTRL.CTRL_bit.CTR_EN = 0;               // Desactivo el contador y lo limpio.
-	PRU0_CTRL.CYCLE_bit.CYCLECOUNT = 0xFFFFFFFF;
-	PRU0_CTRL.CTRL_bit.CTR_EN = 1;               // Inicio del conteo.
-	
+    cycles = 0;
+
+    /* Inicio del conteo de ciclo del segmento de código */
+    PRU0_CTRL.CTRL_bit.CTR_EN = 0;               // Desactivo el contador y lo limpio.
+    PRU0_CTRL.CYCLE_bit.CYCLECOUNT = 0xFFFFFFFF;
+    PRU0_CTRL.CTRL_bit.CTR_EN = 1;               // Inicio del conteo.
+
     /* Cálculo del error */											// (->) Selección de elemento con puntero.
     int error = (pid->input - pid->setpoint);
 
@@ -156,17 +157,20 @@ void update_pid(volatile struct pid_data* pid) {
 
     pid->last_output = pid->output;
     pid->output = pid->max_output - output;
-	
-	/* Fin del conteo */
-	PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
-	cycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;       // Copio el número de ciclos.
-	
-	pid->sum += cycles;
-	
-	pid->med = pid->sum / LOOPS;
-	
-	if (cycles > pid->max) pid->max = cycles;
-	if (cycles < pid->min) pid->min = cycles;	
+
+    /* Fin del conteo */
+    PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
+    cycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;       // Copio el número de ciclos.
+
+    if (pid->sum <= 65300)
+    {
+    pid->sum += cycles;
+
+    pid->med = pid->sum / LOOPS;
+    };
+
+    if (cycles > pid->max) pid->max = cycles;
+    if (cycles < pid->min) pid->min = cycles;	
 
 }
 
@@ -179,9 +183,9 @@ void init_pid(volatile struct pid_data* pid) {
 
     pid->setpoint = 0;
     pid->int_err = 0;
-	
-	pid->sum = 0;
-	pid->med = 0;
-	pid->max = 0;
-	pid->min = 65536;     // número grande aleatorio, que no se cree que se supere.
+
+    pid->sum = 0;
+    pid->med = 0;
+    pid->max = 0;
+    pid->min = 65535;     // maximo valor int.
 }
