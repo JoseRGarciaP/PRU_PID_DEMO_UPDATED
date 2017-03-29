@@ -162,7 +162,7 @@ void update_pid(volatile struct pid_data* pid) {
     PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
     cycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;       // Copio el número de ciclos.
 
-    if (pid->sum <= 65300)
+    if (pid->sum <= 65300)       //Evita el desbordamiento del dato sum (int).
     {
     pid->sum += cycles;
 
