@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
     val -= 0x7FFFFFF;
   }
   
-  printf("%d", val);
+  printf("%d \n", val);
 
   close(fd);
 
