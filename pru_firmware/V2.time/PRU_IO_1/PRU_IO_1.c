@@ -48,7 +48,8 @@ struct pid_data {
     int int_err;
     int input, output, last_output;
     int min_output, max_output;
-	int min, med, max, sum;
+    int min, med, max;
+    unsigned int sum;
 };												//Estas estructuras son compartidas entre las PRUs,
 												// y así se forma la comunicación entre ambas.
 /* Estructura del bloque de memoria compartida */
@@ -363,19 +364,19 @@ void rpmsg_isr(volatile struct pid_data* pid, struct pru_rpmsg_transport *transp
     case ('r'^'o'):
         rpunit->msg = pid->output;
         break;
-	/* Leer número medio de ciclos del PID */
+    /* Leer número medio de ciclos del PID */
     case ('m'^'d'):
         rpunit->msg = pid->med;
         break;
-	/* Leer número maximo de ciclos del PID */
+    /* Leer número maximo de ciclos del PID */
     case ('m'^'x'):
         rpunit->msg = pid->max;
         break;
-	/* Leer número mínimo de ciclos del PID */
+    /* Leer número mínimo de ciclos del PID */
     case ('m'^'n'):
         rpunit->msg = pid->min;
         break;
-		/* Leer suma total de los ciclos del PID */
+    /* Leer suma total de los ciclos del PID */
     case ('s'^'u'):
         rpunit->msg = pid->sum;
         break;
