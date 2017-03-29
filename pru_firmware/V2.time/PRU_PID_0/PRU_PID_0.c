@@ -130,9 +130,9 @@ void update_pid(volatile struct pid_data* pid) {
 	cycles = 0;
 	
 	/* Inicio del conteo de ciclo del segmento de código */
-	PRU0_CTRL.CTRL_bit.CTRL_EN = 0;               // Desactivo el contador y lo limpio.
+	PRU0_CTRL.CTRL_bit.CTR_EN = 0;               // Desactivo el contador y lo limpio.
 	PRU0_CTRL.CYCLE_bit.CYCLECOUNT = 0xFFFFFFFF;
-	PRU0_CTRL.CTRL_bit.CTRL_EN = 1;               // Inicio del conteo.
+	PRU0_CTRL.CTRL_bit.CTR_EN = 1;               // Inicio del conteo.
 	
     /* Cálculo del error */											// (->) Selección de elemento con puntero.
     int error = (pid->input - pid->setpoint);
@@ -158,7 +158,7 @@ void update_pid(volatile struct pid_data* pid) {
     pid->output = pid->max_output - output;
 	
 	/* Fin del conteo */
-	PRU0_CTRL.CTRL_bit.CTRL_EN = 0;                // Se detiene el contador.
+	PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
 	cycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;       // Copio el número de ciclos.
 	
 	pid->sum += cycles;
