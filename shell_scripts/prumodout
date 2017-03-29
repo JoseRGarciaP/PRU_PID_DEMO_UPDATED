@@ -14,3 +14,6 @@ echo "4a334000.pru0" > /sys/bus/platform/drivers/pru-rproc/unbind
 echo "4a338000.pru1"  > /sys/bus/platform/drivers/pru-rproc/unbind
 
 #The unbind appears to disconnect RPMsg (character devices gone).
+#Then, for halt the PRUSS:
+#rmmod pru_rproc
+#rmmod pruss
