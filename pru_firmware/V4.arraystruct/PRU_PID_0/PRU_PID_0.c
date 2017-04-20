@@ -91,7 +91,7 @@ volatile far struct shared_mem share_buff;         // Se define el símbolo shar
  * main.c
 */
 void main(void) {
-    shared_buff.loops = 0;
+    share_buff.loops = 0;
 
     /* Permiso de PRU 1 para inicializarse */
 	
@@ -104,7 +104,7 @@ void main(void) {
 	while(1) {    // Modificar salida del bucle con algún comando
 	
 	    update_pid(&share_buff.pid);
-		shared_buff.loops += 1;                       // Conteo del número de ciclos producidos.
+		share_buff.loops += 1;                       // Conteo del número de ciclos producidos.
 
 	}
 }
@@ -154,7 +154,7 @@ void update_pid(volatile struct pid_data* pid[]) {
 		if (pid[i]->sum <= 65300)            // Evita el desbordamiento del dato sum (unsigned int).
 		{
 		pid[i]->sum += cycles;
-		pid[i]->med = pid[i]->sum / (shared_buff.loops + 1 );			// Le sumo 1 porque shared_buff.loops se actualiza después al final del bucle.
+		pid[i]->med = pid[i]->sum / (share_buff.loops + 1 );			// Le sumo 1 porque shared_buff.loops se actualiza después al final del bucle.
 		};
 
 		if (cycles > pid[i]->max) pid[i]->max = cycles;
