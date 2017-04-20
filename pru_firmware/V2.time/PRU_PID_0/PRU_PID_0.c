@@ -166,7 +166,7 @@ void update_pid(volatile struct pid_data* pid) {
     {
     pid->sum += cycles;
 
-    pid->med = pid->sum / LOOPS;
+    pid->med = pid->sum / (LOOPS + 1);
     };
 
     if (cycles > pid->max) pid->max = cycles;
