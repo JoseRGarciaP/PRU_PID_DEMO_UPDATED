@@ -422,136 +422,136 @@ void rpmsg_isr(volatile struct pid_data pid[], struct pru_rpmsg_transport *trans
 	/* Comandos del PID 1 */
 		
     /* Establece setpoint */
-    case ('s'^'1'):
+    case ('s'^'p'^'d'):							// 0x67
         pid[0].setpoint = rpunit->msg;
         rpunit->msg = pid[0].setpoint;
         break;
     /* Establece Kp */
-    case ('p'^'1'):
+    case ('k'^'p'^'d'):							// 0x7F
         pid[0].Kp_f = rpunit->msg;
         rpunit->msg = pid[0].Kp_f;
         break;
     /* Establece Ki */
-    case ('i'^'1'):
+    case ('k'^'i'^'d'):							// 0x66
         pid[0].Ki_f = rpunit->msg;
         rpunit->msg = pid[0].Ki_f;
         break;
     /* Establece Kd */
-    case ('d'^'1'):
+    case ('k'^'d'^'d'):							// 0x6B
         pid[0].Kd_f = rpunit->msg;
         rpunit->msg = pid[0].Kd_f;
         break;
     /* Establecer salida PWM */
-    case ('o'^'1'):
+    case ('o'^'d'):							// 0x0B
         pid[0].output = rpunit->msg;
         rpunit->msg = pid[0].output;
         break;
     /* Leer setpoint */
-    case ('r'^'s'^'1'):
+    case ('r'^'s'^'d'):							// 0x65
         rpunit->msg = pid[0].setpoint;
         break;
     /* Leer Kp */
-    case ('r'^'p'^'1'):
+    case ('r'^'k'^'p'^'d'):						// 0x0D
         rpunit->msg = pid[0].Kp_f;
         break;
     /* Leer Ki */
-    case ('r'^'i'^'1'):
+    case ('r'^'k'^'i'^'d'):						// 0x14
         rpunit->msg = pid[0].Ki_f;
         break;
     /* Leer Kd */
-    case ('r'^'d'^'1'):
+    case ('r'^'k'^'d'^'d'):						// 0x19
         rpunit->msg = pid[0].Kd_f;
         break;
     /* Leer encoder RPM */
-    case ('r'^'e'^'1'):
+    case ('r'^'e'^'d'):							// 0x73
         rpunit->msg = pid[0].input;
         break;
     /* Leer salida PWM */
-    case ('r'^'o'^'1'):
+    case ('r'^'o'^'d'):							// 0x79
         rpunit->msg = pid[0].output;
         break;
 	/* Leer número medio de ciclos del PID */
-    case ('m'^'d'^'1'):
+    case ('m'^'d'^'d'):							// 0x6D
         rpunit->msg = pid[0].med;
         break;
 	/* Leer número maximo de ciclos del PID */
-    case ('m'^'x'^'1'):
+    case ('m'^'x'^'d'):							// 0x71
         rpunit->msg = pid[0].max;
         break;
 	/* Leer número mínimo de ciclos del PID */
-    case ('m'^'n'^'1'):
+    case ('m'^'n'^'d'):							// 0x60
         rpunit->msg = pid[0].min;
         break;
 	/* Leer suma total de los ciclos del PID */
-    case ('s'^'u'^'1'):
+    case ('s'^'u'^'d'):							// 0x62
         rpunit->msg = pid[0].sum;
         break;
 		
 	/* Comandos del PID 2 */
 	
 	/* Establece setpoint */	
-	case ('s'^'2'):
+	case ('s'^'p'^'i'):							// 0x6A
         pid[1].setpoint = rpunit->msg;
         rpunit->msg = pid[1].setpoint;
         break;
     /* Establece Kp */
-    case ('p'^'2'):
+    case ('k'^'p'^'i'):							// 0x72
         pid[1].Kp_f = rpunit->msg;
         rpunit->msg = pid[1].Kp_f;
         break;
     /* Establece Ki */
-    case ('i'^'2'):
+    case ('k'^'i'^'i'^'q'):						// 0x1A
         pid[1].Ki_f = rpunit->msg;
         rpunit->msg = pid[1].Ki_f;
         break;
     /* Establece Kd */
-    case ('d'^'2'):
+    case ('k'^'d'^'i'^'q'):						// 0x17
         pid[1].Kd_f = rpunit->msg;
         rpunit->msg = pid[1].Kd_f;
         break;
     /* Establecer salida PWM */
-    case ('o'^'2'):
+    case ('o'^'i'):								// 0x06
         pid[1].output = rpunit->msg;
         rpunit->msg = pid[1].output;
         break;
     /* Leer setpoint */
-    case ('r'^'s'^'2'):
+    case ('r'^'s'^'i'):							// 0x68
         rpunit->msg = pid[1].setpoint;
         break;
     /* Leer Kp */
-    case ('r'^'p'^'2'):
+    case ('r'^'k'^'p'^'i'):						// 0x00
         rpunit->msg = pid[1].Kp_f;
         break;
     /* Leer Ki */
-    case ('r'^'i'^'2'):
+    case ('r'^'k'^'i'^'q'):						// 0x01
         rpunit->msg = pid[1].Ki_f;
         break;
     /* Leer Kd */
-    case ('r'^'d'^'2'):
+    case ('r'^'k'^'r'^'q'):						// 0x0C
         rpunit->msg = pid[1].Kd_f;
         break;
     /* Leer encoder RPM */
-    case ('r'^'e'^'2'):
+    case ('r'^'e'^'i'):							// 0x7E
         rpunit->msg = pid[1].input;
         break;
     /* Leer salida PWM */
-    case ('r'^'o'^'2'):
+    case ('r'^'o'^'i'):							// 0x74
         rpunit->msg = pid[1].output;
         break;
 	/* Leer número medio de ciclos del PID */
-    case ('m'^'d'^'2'):
+    case ('m'^'d'^'i'^'q'):						// 0x11
         rpunit->msg = pid[1].med;
         break;
 	/* Leer número maximo de ciclos del PID */
-    case ('m'^'x'^'2'):
+    case ('m'^'x'^'i'):							// 0x7C
         rpunit->msg = pid[1].max;
         break;
 	/* Leer número mínimo de ciclos del PID */
-    case ('m'^'n'^'2'):
+    case ('m'^'i'^'i'^'q'):						// 0x1C
         rpunit->msg = pid[1].min;
         break;
 	/* Leer suma total de los ciclos del PID */
-    case ('s'^'u'^'2'):
+    case ('s'^'u'^'i'):							// 0x6F
         rpunit->msg = pid[1].sum;
         break;
     }
