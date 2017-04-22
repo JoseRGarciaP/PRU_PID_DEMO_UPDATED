@@ -527,7 +527,7 @@ void rpmsg_isr(volatile struct pid_data pid[], struct pru_rpmsg_transport *trans
         rpunit->msg = pid[1].Ki_f;
         break;
     /* Leer Kd */
-    case ('r'^'k'^'r'^'q'):						// 0x0C
+    case ('r'^'k'^'d'^'q'):						// 0x0C
         rpunit->msg = pid[1].Kd_f;
         break;
     /* Leer encoder RPM */
