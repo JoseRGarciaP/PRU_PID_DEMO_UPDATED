@@ -479,7 +479,7 @@ void rpmsg_isr(volatile struct pid_data pid[], struct pru_rpmsg_transport *trans
         rpunit->msg = pid[0].max;
         break;
 	/* Leer número mínimo de ciclos del PID */
-    case ('m'^'n'^'d'):							// 0x60
+    case ('m'^'i'^'d'):							// 0x60
         rpunit->msg = pid[0].min;
         break;
 	/* Leer suma total de los ciclos del PID */
