@@ -184,11 +184,11 @@ void update_pid(volatile struct pid_data* pid) {
 	output = output_f >> SHIFT;
 
 	/* Establecimieto de la salida PID, comprobación min/max de la salida */
-	if (output < pid->min_output2) output = pid->min_output2;
-	if (output > pid->max_output2) output = pid->max_output2;
+	if (output < pid->min_output) output = pid->min_output;
+	if (output > pid->max_output) output = pid->max_output;
 
 	pid->last_output2 = pid->output2;
-	pid->output2 = pid->max_output2 - output;
+	pid->output2 = pid->max_output - output;
 
 	/* Fin del conteo */
 	PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
