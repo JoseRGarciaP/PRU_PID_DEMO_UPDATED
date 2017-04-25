@@ -184,12 +184,7 @@ void init_pid(volatile struct pid_data pid[]) {
 		pid[i].input = 0;
 		pid[i].output = 0;
 
-		pid[i].setpoint = 0;
 		pid[i].int_err = 0;
-	
-		pid[i].sum = 0;
-		pid[i].med = 0;
-		pid[i].max = 0;
-		pid[i].min = 65535;     // máximo valor unsigned int.
+
 	}
 }
