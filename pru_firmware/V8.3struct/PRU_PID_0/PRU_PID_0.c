@@ -95,7 +95,7 @@ void main(void) {
     /* Permiso de PRU 1 para inicializarse */
 	
 	/* Inicializar PID */
-	init_pid(share_buff.pid);
+	init_pid(share_buff.pid, &share_buff.c_pid);
 		
 	while (!share_buff.init_flag == 1);		// Permiso de PRU 1 para empezar el control PID
 	
