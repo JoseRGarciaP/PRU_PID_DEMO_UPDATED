@@ -195,6 +195,6 @@ void main(void) {
 		if (cycles > share_buff.cycles.max) share_buff.cycles.max = cycles;
 		if (cycles < share_buff.cycles.min) share_buff.cycles.min = cycles;
 
-		share_buff.c_pid.loops += 1;                       // Conteo del número de ciclos producidos.
+		share_buff.cycles.loops += 1;                       // Conteo del número de ciclos producidos.
 	}
 }
