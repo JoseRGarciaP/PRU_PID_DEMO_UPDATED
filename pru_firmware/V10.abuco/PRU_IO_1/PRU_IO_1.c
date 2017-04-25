@@ -375,7 +375,7 @@ void init_rpmsg(struct pru_rpmsg_transport* transport) {
 /*
  * rpmsg_interrupt
  */
-void rpmsg_interrupt(volatile struct pid_data pid1, volatile struct pid_data pid2, volatile struct cycles_data* cycles, struct pru_rpmsg_transport *transport, uint8_t *payload,
+void rpmsg_interrupt(volatile struct pid_data* pid1, volatile struct pid_data* pid2, volatile struct cycles_data* cycles, struct pru_rpmsg_transport *transport, uint8_t *payload,
         uint16_t src, uint16_t dst, uint16_t len) {
     // Comprueba el bit 31 del registro R31 para ver si ARM ha mensajeado */
     if(__R31 & HOST_INT){
