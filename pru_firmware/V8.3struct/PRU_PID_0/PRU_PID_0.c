@@ -190,6 +190,6 @@ void init_pid(volatile struct pid_data pid[], volatile struct pid_cycles* c_pid)
 		c_pid->med = 0;
 		c_pid->max = 0;
 		c_pid->min = 65535;     // máximo valor unsigned int.
-		c_pid->loops = 0;
 	}
+	c_pid->loops = 0;
 }
