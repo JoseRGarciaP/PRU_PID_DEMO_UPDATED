@@ -81,17 +81,17 @@ void init_pid(volatile struct pid_data pid[], volatile struct pid_cycles* c_pid)
                                                    // sección ".share_buff" al símbolo share_buff
 volatile far struct shared_mem share_buff;         // Se define el símbolo shared_buff como una instancia de la estructura
                                                    // shared_mem, tipo volatile y far ( 16 bits superiores de la memoria)
-/*
+
 #define LOOPS (*((volatile unsigned int *)0x4A301000))   // Defino la variable LOOP en el espacio de memoria de datos PRU RAM0.
                                                          // De esta manera la otra PRU también tendrá esta variable sin necesidad
-														 // de definirla en su código.
-*/ // Lo hago con la variable loops de la estructura
+							 // de definirla en su código.
+
 														 
 /*
  * main.c
 */
 void main(void) {
-
+	LOOPS = 0;
     /* Permiso de PRU 1 para inicializarse */
 	
 	/* Inicializar PID */
@@ -103,7 +103,7 @@ void main(void) {
 	while(1) {    // Modificar salida del bucle con algún comando
 	
 	    update_pid(share_buff.pid, &share_buff.c_pid);
-		share_buff.c_pid.loops += 1;                       // Conteo del número de ciclos producidos.
+		LOOPS += 1;                       // Conteo del número de ciclos producidos.
 
 	}
 }
@@ -153,6 +153,7 @@ void update_pid(volatile struct pid_data pid[], volatile struct pid_cycles* c_pi
 
 	if (c_pid->sum <= 65300)            // Evita el desbordamiento del dato sum (unsigned int).
 	{
+	c_pid->loops = LOOPS;
 	c_pid->sum += cycles;
 	c_pid->med = c_pid->sum / (c_pid->loops + 1 );			// Le sumo 1 porque shared_buff.loops se actualiza después al final del bucle.
 	};
