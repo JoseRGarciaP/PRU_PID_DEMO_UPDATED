@@ -526,7 +526,7 @@ void rpmsg_isr(volatile struct pid_data pid[], volatile struct pid_cycles* c_pid
         rpunit->msg = c_pid->min;
         break;
 	/* Leer suma total de los ciclos del PID */
-    case ('s'^'u'):								// 0x06
+    case ('s'^'u'^'m'^'a'):						// 0x0A
         rpunit->msg = c_pid->sum;
         break;
 	/* Leer total de bucles */
