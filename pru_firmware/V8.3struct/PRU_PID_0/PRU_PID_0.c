@@ -74,7 +74,7 @@ struct shared_mem {
 
 /* Declaración de funciones, prototipo */
 void update_pid(volatile struct pid_data pid[], volatile struct pid_cycles* c_pid);    // Función de actualización del PID.
-void init_pid(volatile struct pid_data pid[]);      // Función de inicialización del PID.
+void init_pid(volatile struct pid_data pid[], volatile struct pid_cycles* c_pid);      // Función de inicialización del PID.
 
 /* Establecimiento de la memoria compartida */
 #pragma DATA_SECTION(share_buff, ".share_buff")    // Asigna el espacio de memoria de la
@@ -91,7 +91,6 @@ volatile far struct shared_mem share_buff;         // Se define el símbolo shar
  * main.c
 */
 void main(void) {
-    share_buff.c_pid.loops = 0;
 
     /* Permiso de PRU 1 para inicializarse */
 	
@@ -166,7 +165,7 @@ void update_pid(volatile struct pid_data pid[], volatile struct pid_cycles* c_pi
 /*
  * init_pid
  */
-void init_pid(volatile struct pid_data pid[]) {
+void init_pid(volatile struct pid_data pid[], volatile struct pid_cycles* c_pid) {
     int i;
 	for (i = 0; i < nPIDs; i++)
 	{
@@ -185,6 +184,11 @@ void init_pid(volatile struct pid_data pid[]) {
 		pid[i].output = 0;
 
 		pid[i].int_err = 0;
-
+		
+		c_pid->sum = 0;
+		c_pid->med = 0;
+		c_pid->max = 0;
+		c_pid->min = 65535;     // máximo valor unsigned int.
+		c_pid->loops = 0;
 	}
 }
