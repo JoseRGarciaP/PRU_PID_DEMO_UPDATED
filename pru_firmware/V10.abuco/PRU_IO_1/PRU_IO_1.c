@@ -64,6 +64,13 @@ struct shared_mem {
 	volatile struct pid_data pid2;
 };
 
+
+/* Establecimiento de la memoria compartida */
+#pragma DATA_SECTION(share_buff, ".share_buff")    // Asigna el espacio de memoria de la
+                                                   // sección ".share_buff" al símbolo share_buff
+volatile far struct shared_mem share_buff;         // Se define el símbolo shared_buff como una instancia de la estructura
+                                                   // shared_mem, tipo volatile y far ( 16 bits superiores de la memoria)
+
 /* Estructura de datos RPMsg */
 struct rpmsg_unit {
     char cmd;                  // Comando. Es el primer byte del buffer RPMsg.
@@ -148,11 +155,6 @@ unsigned int payload_to_int(uint8_t *payload);        // Dato de comunicación a
 /* Buffer RPMsg, global para reducir el tamaño de pila */
 uint8_t payload[RPMSG_BUF_SIZE];
 
-/* Establecimiento de la memoria compartida */
-#pragma DATA_SECTION(share_buff, ".share_buff")    // Asigna el espacio de memoria de la
-                                                   // sección ".share_buff" al símbolo share_buff
-volatile far struct shared_mem share_buff;         // Se define el símbolo shared_buff como una instancia de la estructura
-                                                   // shared_mem, tipo volatile y far ( 16 bits superiores de la memoria)
 												   
 /*
  * main.c
