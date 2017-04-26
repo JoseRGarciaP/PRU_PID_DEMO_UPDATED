@@ -89,7 +89,9 @@ volatile far struct shared_mem share_buff;         // Se define el símbolo shar
 */
 void main(void) {
 	
-    share_buff.cycles.loops = 0;
+	while (!(share_buff.init_flag == 1));		// Permiso de PRU 1 para empezar el control PID
+	
+    	share_buff.cycles.loops = 0;
 	share_buff.cycles.min = 65535;
 	share_buff.cycles.med = 0;
 	share_buff.cycles.max = 0;
@@ -120,8 +122,6 @@ void main(void) {
 	
 	share_buff.pid2.input = 0;
 	share_buff.pid2.output = 0;
-	
-	while (!(share_buff.init_flag == 1));		// Permiso de PRU 1 para empezar el control PID
 	
     /* Bucle principal */
 	while(1) {    // Modificar salida del bucle con algún comando
