@@ -181,7 +181,6 @@ void main(void) {
 
         /* Establece la velocidad PWM (registro ACMP del eCAP) */
         CT_ECAP.CAP2_bit.CAP2 = share_buff.pid1.output;
-		PWMSS2.ECAP_CAP2_bit.CAP2 = share_buff.pid2.output;
 //      CT_ECAP.CAP2_bit.CAP2 = 0x0AF0;  //  Esto fuerza la salida a un valor determinado PWM.
 //      PWMSS2.ECAP_CAP2_bit.CAP2 = 0x0AF0;
 
@@ -189,10 +188,6 @@ void main(void) {
         if (PWMSS1.EQEP_QFLG & 0x0800) {
             PWMSS1.EQEP_QCLR |= 0x0800;
             share_buff.pid1.input = get_enc_rpm1();
-        }
-		if (PWMSS2.EQEP_QFLG & 0x0800) {
-            PWMSS2.EQEP_QCLR |= 0x0800;
-            share_buff.pid2.input = get_enc_rpm2();
         }
     }
 }
@@ -387,7 +382,7 @@ void rpmsg_interrupt(volatile struct pid_data* pid1, volatile struct cycles_data
                 /* Recibe los mensajes */
                 if(pru_rpmsg_receive(transport, &src, &dst, payload, &len) == PRU_RPMSG_SUCCESS){
                     /* Servicio de la interrupción */
-                    rpmsg_isr(pid1, pid2, transport, payload, src, dst);
+                    rpmsg_isr(pid1, cycles, transport, payload, src, dst);
                 }
 	}
 }
