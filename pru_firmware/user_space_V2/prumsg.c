@@ -77,11 +77,15 @@ int main(int argc, char *argv[]) {		// argv es un array de punteros char. Y argc
   
   val = (msg_buff[0] | msg_buff[1] << 0x08 | msg_buff[2] << 0x10 | msg_buff[3] << 0x18);
 
-  /* Convert back to signed */
+/*		Esto no vale pa naa parece en un principio... y casi final.
+  // Convert back to signed
   if (val >> 0x1B) {					// Si desplazando 27 bits a la derecha siguen quedando 1`s, es decir, val mayor que 134217727.
     val &= (0x7FFFFFF);					// Se borran los 1`s esos y se resta a val 134217727.
     val -= 0x7FFFFFF;
   }
+*/ 
+
+// Poner que si el dato que se ha pedido es el de loops que lo saque en unsigned int.
   
   printf("El valor de %s es: %d\n",argv[2], val);
 
