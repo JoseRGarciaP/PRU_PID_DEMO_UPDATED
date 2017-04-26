@@ -185,7 +185,7 @@ void main(void) {
 		
 		/* Fin del conteo */
 		PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
-		cycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;       // Copio el número de ciclos.
+		ncycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;       // Copio el número de ciclos.
 		
 		if (share_buff.cycles.sum <= 65300)            // Evita el desbordamiento del dato sum (unsigned int).
 		{
