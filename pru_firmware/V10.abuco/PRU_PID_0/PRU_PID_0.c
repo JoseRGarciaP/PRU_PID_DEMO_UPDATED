@@ -50,7 +50,7 @@ volatile register uint32_t __R30;
 
 struct pid_data {
     /* Sintoniación PID */
-    int Kp_f, Ki_f, Kd_f;
+    short Kp_f, Ki_f, Kd_f;
 
     /* Controles PID */
     int setpoint;
