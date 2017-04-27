@@ -88,6 +88,8 @@ volatile far struct shared_mem share_buff;         // Se define el símbolo shar
  * main.c
 */
 void main(void) {
+	unsigned int loop;
+	loop = 0;
 	
 	while (!(share_buff.init_flag == 1));		// Permiso de PRU 1 para empezar el control PID
 	
@@ -127,7 +129,7 @@ void main(void) {
 	while(1) {    // Modificar salida del bucle con algún comando
 		
 		unsigned int p_f, d_f, ncycles;
-		int output_f, output, error;
+		short output_f, output, error;
 		ncycles = 0;
 		
 		/* Inicio del conteo de ciclo del segmento de código */
@@ -187,15 +189,16 @@ void main(void) {
 		PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
 		ncycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;       // Copio el número de ciclos.
 		
-		if (share_buff.cycles.sum <= 65300)            // Evita el desbordamiento del dato sum (unsigned int).
+		if (share_buff.cycles.sum <= 3000000000)            // Evita el desbordamiento del dato sum (unsigned int).
 		{
+		share_buff.cycles.loops = loop;
 		share_buff.cycles.sum += ncycles;
-		share_buff.cycles.med = share_buff.cycles.sum / (share_buff.cycles.loops + 1 );			// Le sumo 1 porque shared_buff.loops se actualiza después al final del bucle.
+		share_buff.cycles.med = share_buff.cycles.sum / (share_buff.cycles.loops + 1);			// Le sumo 1 porque shared_buff.loops se actualiza después al final del bucle.
 		};
 		
 		if (ncycles > share_buff.cycles.max) share_buff.cycles.max = ncycles;
 		if (ncycles < share_buff.cycles.min) share_buff.cycles.min = ncycles;
 
-		share_buff.cycles.loops += 1;                       // Conteo del número de ciclos producidos.
+		loop += 1;                       // Conteo del número de ciclos producidos.
 	}
 }
