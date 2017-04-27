@@ -74,7 +74,8 @@ volatile far struct shared_mem share_buff;         // Se define el símbolo shar
 /* Estructura de datos RPMsg */
 struct rpmsg_unit {
     char cmd;                  // Comando. Es el primer byte del buffer RPMsg.
-    unsigned int msg;          // Mensaje (Dato numérico de sintonización PID ó de parámetro). Son los bytes siguientes con el valor numerico, si lo hubiera.
+    int msg;     	     // Mensaje (Dato numérico de sintonización PID ó de parámetro). Son los bytes siguientes con el valor numerico, si lo hubiera.
+				// Modificado, antes era unsigned int msg;
 };
 
 /* Registros GPIO de las PRU */
