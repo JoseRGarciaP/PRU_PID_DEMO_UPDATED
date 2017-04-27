@@ -61,7 +61,7 @@ struct pid_data {
 												// y así se forma la comunicación entre ambas.
 
 struct cycles_data {
-	unsigned int min, med, max, sum, loops;
+	int min, med, max, sum, loops;
 };
 												
 /* Estructura del bloque de memoria compartida */
@@ -128,7 +128,7 @@ void main(void) {
     /* Bucle principal */
 	while(1) {    // Modificar salida del bucle con algún comando
 		
-		unsigned int p_f, d_f, ncycles;
+		int p_f, d_f, ncycles;
 		short output_f, output, error;
 		ncycles = 0;
 		
@@ -189,7 +189,7 @@ void main(void) {
 		PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
 		ncycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;       // Copio el número de ciclos.
 		
-		if (share_buff.cycles.sum <= 3000000000)            // Evita el desbordamiento del dato sum (unsigned int).
+		if (share_buff.cycles.sum <= 20000000000)            // Evita el desbordamiento del dato sum (unsigned int).
 		{
 		share_buff.cycles.loops = loop;
 		share_buff.cycles.sum += ncycles;
