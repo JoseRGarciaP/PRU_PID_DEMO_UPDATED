@@ -24,10 +24,10 @@ int main(int argc, char *argv[]) {		// argv es un array de punteros char. Y argc
   sprintf(file, "/dev/rpmsg_pru%s", argv[1]);        // Devuelve un string formateado "file". Con la cadena escrita y los datos
 														// del puntero argv[1].
 														
-  fd = open(file, O_RDWR);							// Abre el archivo del canal RPMsg dado por el string "file" y 
-														// con el modo de acceso O_RDWR (Open for reading and writing).
-														// La función abrirá el archivo y devolverá un entero no negativo
-														// que represente el descriptor de archivo.
+  fd = open(file, O_RDWR);				// Abre el archivo del canal RPMsg dado por el puntero de strings "file" y 
+							// con el modo de acceso O_RDWR (Open for reading and writing).
+							// La función abrirá el archivo y devolverá un entero no negativo
+							// que represente el descriptor de archivo.
 
 
   /* Cierra el programa si el archivo no existe */
