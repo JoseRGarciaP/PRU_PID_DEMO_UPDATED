@@ -88,7 +88,7 @@ volatile far struct shared_mem share_buff;         // Se define el símbolo shar
  * main.c
 */
 void main(void) {
-	unsigned int loop;
+	int loop;
 	loop = 0;
 	
 	while (!(share_buff.init_flag == 1));		// Permiso de PRU 1 para empezar el control PID
@@ -189,7 +189,7 @@ void main(void) {
 		PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
 		ncycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;       // Copio el número de ciclos.
 		
-		if (share_buff.cycles.sum <= 20000000000)            // Evita el desbordamiento del dato sum (unsigned int).
+		if (share_buff.cycles.sum <= 2000000000)            // Evita el desbordamiento del dato sum (unsigned int).
 		{
 		share_buff.cycles.loops = loop;
 		share_buff.cycles.sum += ncycles;
