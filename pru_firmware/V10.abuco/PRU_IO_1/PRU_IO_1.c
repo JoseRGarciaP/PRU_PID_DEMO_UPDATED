@@ -42,13 +42,13 @@
 /* Estructura de datos del PID compartida - asegurar que ambas estructuras coinciden con PRU 0 */
 struct pid_data {
     /* Sintoniación PID */
-    int Kp_f, Ki_f, Kd_f;
+    	short Kp_f, Ki_f, Kd_f;
 
     /* Controles PID */
-    int setpoint;
-    int int_err;
-    int input, output, last_output;
-    int min_output, max_output;
+    	short setpoint;
+    	int int_err;
+    	short input, output, last_output;
+    	short min_output, max_output;
 };												// Estas estructuras son compartidas entre las PRUs,
 												// y así se forma la comunicación entre ambas.
 
@@ -58,9 +58,9 @@ struct cycles_data {
 												
 /* Estructura del bloque de memoria compartida */
 struct shared_mem {
-    volatile char init_flag;
+    	volatile char init_flag;
 	volatile struct cycles_data cycles;
-    volatile struct pid_data pid1;
+    	volatile struct pid_data pid1;
 	volatile struct pid_data pid2;
 };
 
@@ -324,7 +324,7 @@ void init_pwm() {													// Establecer otro periférico para el otro motor.
 //  get_enc_rpm()
 
 int get_enc_rpm1() {
-    int rpm = 0;
+    short rpm = 0;
 
     /* Comprobación de errores de desbordamiento, encender el LED y reestablecer a 0 el RPM */
     if (PWMSS1.EQEP_QEPSTS &= 0x0C) {
@@ -340,7 +340,7 @@ int get_enc_rpm1() {
 }
 
 int get_enc_rpm2() {
-    int rpm = 0;
+    short rpm = 0;
 
     /* Comprobación de errores de desbordamiento, encender el LED y reestablecer a 0 el RPM */
     if (PWMSS2.EQEP_QEPSTS &= 0x0C) {
