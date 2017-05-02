@@ -179,7 +179,7 @@ void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, 
 	
 	if (ncycles > cycles->max) cycles->max = ncycles;
 	if (ncycles < cycles->min) cycles->min = ncycles;
-
+}
 	
 /*
  * init_pid
@@ -197,7 +197,7 @@ void init_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, vo
 	pid1->Kd_f = 200;
 	pid1->int_err = 0;
 	
-	pid1->max_output = 0x100000; // Decimal 4096. Es el periodo del módulo eCAP para convertir en PWM. (Máximo ciclo de trabajo)
+	pid1->max_output = 0x1000; // Decimal 4096. Es el periodo del módulo eCAP para convertir en PWM. (Máximo ciclo de trabajo)
 	pid1->min_output = 0;
 	
 	pid1->setpoint = 3000;
