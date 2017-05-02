@@ -543,7 +543,7 @@ void rpmsg_isr(volatile struct pid_data* pid1, volatile struct pid_data* pid2, v
 	    case ('r'^'s'^'t'):							    // 0x75
 		cycles->loops = 0;
 		cycles->med = 0;
-		cycles->sumc = 0;
+		cycles->sum = 0;
 		break;
 		    
     }
