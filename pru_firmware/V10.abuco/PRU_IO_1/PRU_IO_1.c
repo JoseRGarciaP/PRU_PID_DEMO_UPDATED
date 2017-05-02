@@ -53,7 +53,7 @@ struct pid_data {
 												// y así se forma la comunicación entre ambas.
 
 struct cycles_data {
-	unsigned int min, med, max, sum, loops;
+	int min, med, max, sum, loops;
 };
 												
 /* Estructura del bloque de memoria compartida */
