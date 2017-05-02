@@ -120,65 +120,65 @@ void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, 
 	
 	/* PID 1 */
 	/* Cálculo del error */											// (->) Selección de elemento con puntero.
-	error = (share_buff.pid1.input - share_buff.pid1.setpoint);
+	error = (pid1->input - pid1->setpoint);
 	
 	/* Cálculo de la parte Proporcional */
-	p_f = share_buff.pid1.Kp_f * error;
+	p_f = pid1->Kp_f * error;
 	
 	/* Cálculo de la parte Integral */
-	share_buff.pid1.int_err += (share_buff.pid1.Ki_f * error) >> SHIFT;
+	pid1->int_err += (pid1->Ki_f * error) >> SHIFT;
 	
 	/* Cálculo de la parte Derivativa */
-	d_f = share_buff.pid1.Kd_f * (share_buff.pid1.output - share_buff.pid1.last_output);
+	d_f = pid1->Kd_f * (pid1->output - pid1->last_output);
 	
 	/* Suma total de la salida PID */
-	output_f = p_f + share_buff.pid1.int_err + d_f;
+	output_f = p_f + pid1->int_err + d_f;
 	output = output_f >> SHIFT;
 	
 	/* Establecimieto de la salida PID, comprobación min/max de la salida */
-	if (output < share_buff.pid1.min_output) output = share_buff.pid1.min_output;
-	if (output > share_buff.pid1.max_output) output = share_buff.pid1.max_output;
+	if (output < pid1->min_output) output = pid1->min_output;
+	if (output > pid1->max_output) output = pid1->max_output;
 	
-	share_buff.pid1.last_output = share_buff.pid1.output;
-	share_buff.pid1.output = share_buff.pid1.max_output - output;
+	pid1->last_output = pid1->output;
+	pid1->output = pid1->max_output - output;
 	
 	/* PID 2 */
 	/* Cálculo del error */											// (->) Selección de elemento con puntero.
-	error = (share_buff.pid2.input - share_buff.pid2.setpoint);
+	error = (pid2->input - pid2->setpoint);
 	
 	/* Cálculo de la parte Proporcional */
-	p_f = share_buff.pid2.Kp_f * error;
+	p_f = pid2->Kp_f * error;
 	
 	/* Cálculo de la parte Integral */
-	share_buff.pid2.int_err += (share_buff.pid2.Ki_f * error) >> SHIFT;
+	pid2->int_err += (pid2->Ki_f * error) >> SHIFT;
 	
 	/* Cálculo de la parte Derivativa */
-	d_f = share_buff.pid2.Kd_f * (share_buff.pid2.output - share_buff.pid2.last_output);
+	d_f = pid2->Kd_f * (pid2->output - pid2->last_output);
 	
 	/* Suma total de la salida PID */
-	output_f = p_f + share_buff.pid2.int_err + d_f;
+	output_f = p_f + pid2->int_err + d_f;
 	output = output_f >> SHIFT;
 	
 	/* Establecimieto de la salida PID, comprobación min/max de la salida */
-	if (output < share_buff.pid2.min_output) output = share_buff.pid2.min_output;
-	if (output > share_buff.pid2.max_output) output = share_buff.pid2.max_output;
+	if (output < pid2->min_output) output = pid2->min_output;
+	if (output > pid2->max_output) output = pid2->max_output;
 	
-	share_buff.pid2.last_output = share_buff.pid2.output;
-	share_buff.pid2.output = share_buff.pid2.max_output - output;
+	pid2->last_output = pid2->output;
+	pid2->output = pid2->max_output - output;
 	
 	/* Fin del conteo */
 	PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
 	ncycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;       // Copio el número de ciclos.
 	
-	if (share_buff.cycles.sum <= 4000000000)            // Evita el desbordamiento del dato sum (unsigned int).
+	if (cycles->sum <= 4000000000)            // Evita el desbordamiento del dato sum (unsigned int).
 	{
-		share_buff.cycles.sum += ncycles;
-		share_buff.cycles.med = share_buff.cycles.sum / (share_buff.cycles.loops + 1);		// Le sumo 1 porque shared_buff.loops se actualiza después al final del bucle.
-		share_buff.cycles.loops += 1;
+		cycles->sum += ncycles;
+		cycles->med = cycles->sum / (cycles->loops + 1);		// Le sumo 1 porque shared_buff.loops se actualiza después al final del bucle.
+		cycles->loops += 1;
 	};
 	
-	if (ncycles > share_buff.cycles.max) share_buff.cycles.max = ncycles;
-	if (ncycles < share_buff.cycles.min) share_buff.cycles.min = ncycles;
+	if (ncycles > cycles->max) cycles->max = ncycles;
+	if (ncycles < cycles->min) cycles->min = ncycles;
 
 	
 /*
@@ -186,35 +186,35 @@ void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, 
  */
 void init_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, volatile struct cycles_data* cycles) {
 	/* Cycles */
-    	share_buff.cycles.loops = 0;
-	share_buff.cycles.min = 1000;
-	share_buff.cycles.med = 0;
-	share_buff.cycles.max = 0;
-	share_buff.cycles.sum = 0;
+    	cycles->loops = 0;
+	cycles->min = 1000;
+	cycles->med = 0;
+	cycles->max = 0;
+	cycles->sum = 0;
 	/* PID 1 */
-	share_buff.pid1.Kp_f = 500;
-	share_buff.pid1.Ki_f = 200;
-	share_buff.pid1.Kd_f = 200;
-	share_buff.pid1.int_err = 0;
+	pid1->Kp_f = 500;
+	pid1->Ki_f = 200;
+	pid1->Kd_f = 200;
+	pid1->int_err = 0;
 	
-	share_buff.pid1.max_output = 0x100000; // Decimal 4096. Es el periodo del módulo eCAP para convertir en PWM. (Máximo ciclo de trabajo)
-	share_buff.pid1.min_output = 0;
+	pid1->max_output = 0x100000; // Decimal 4096. Es el periodo del módulo eCAP para convertir en PWM. (Máximo ciclo de trabajo)
+	pid1->min_output = 0;
 	
-	share_buff.pid1.setpoint = 3000;
+	pid1->setpoint = 3000;
 	
-	share_buff.pid1.input = 0;
-	share_buff.pid1.output = 0;
+	pid1->input = 0;
+	pid1->output = 0;
 	/* PID 2 */
-	share_buff.pid2.Kp_f = 500;
-	share_buff.pid2.Ki_f = 400;
-	share_buff.pid2.Kd_f = 100;
-	share_buff.pid2.int_err = 0;
+	pid2->Kp_f = 500;
+	pid2->Ki_f = 400;
+	pid2->Kd_f = 100;
+	pid2->int_err = 0;
 	
-	share_buff.pid2.max_output = 0x1000; // Decimal 4096. Es el periodo del módulo eCAP para convertir en PWM. (Máximo ciclo de trabajo)
-	share_buff.pid2.min_output = 0;
+	pid2->max_output = 0x1000; // Decimal 4096. Es el periodo del módulo eCAP para convertir en PWM. (Máximo ciclo de trabajo)
+	pid2->min_output = 0;
 	
-	share_buff.pid2.setpoint = 3000;
+	pid2->setpoint = 3000;
 	
-	share_buff.pid2.input = 0;
-	share_buff.pid2.output = 0;
+	pid2->input = 0;
+	pid2->output = 0;
 }
