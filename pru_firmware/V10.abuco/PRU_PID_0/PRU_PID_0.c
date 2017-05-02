@@ -61,7 +61,7 @@ struct pid_data {
 												// y así se forma la comunicación entre ambas.
 
 struct cycles_data {
-	int min, med, max, sum, loops;
+	unsigned int min, med, max, sum, loops;
 };
 												
 /* Estructura del bloque de memoria compartida */
@@ -81,40 +81,133 @@ volatile far struct shared_mem share_buff;         // Se define el símbolo shar
 /*
 #define LOOPS (*((volatile unsigned int *)0x4A301000))   // Defino la variable LOOP en el espacio de memoria de datos PRU RAM0.
                                                          // De esta manera la otra PRU también tendrá esta variable sin necesidad
-														 // de definirla en su código.
-*/ // Lo hago con la variable loops de la estructura
-														 
+							// de definirla en su código.
+*/
+
+/* Declaración de funciones, prototipo */
+void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, volatile struct cycles_data* cycles);    // Función de actualización del PID.
+void init_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, volatile struct cycles_data* cycles);      // Función de inicialización del PID.
+
 /*
  * main.c
 */
 void main(void) {
-	int loop;
-	loop = 0;
 	
 	while (!(share_buff.init_flag == 1));		// Permiso de PRU 1 para empezar el control PID
 	
+	init_pid(&share_buff.pid1, &share_buff.pid2, &share_buff.cycles);
+	
+    /* Bucle principal */
+	while(1) {    // Modificar salida del bucle con algún comando
+		
+		update_pid(&share_buff.pid1, &share_buff.pid2, &share_buff.cycles);
+	}
+}
+
+/*
+ * update_pid
+ */
+void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, volatile struct cycles_data* cycles) {
+	
+	short ncycles;
+	int output_f, output, error, p_f, d_f;
+	ncycles = 0;
+	
+	/* Inicio del conteo de ciclo del segmento de código */
+	PRU0_CTRL.CTRL_bit.CTR_EN = 0;               // Desactivo el contador y lo limpio.
+	PRU0_CTRL.CYCLE_bit.CYCLECOUNT = 0xFFFFFFFF;
+	PRU0_CTRL.CTRL_bit.CTR_EN = 1;               // Inicio del conteo.
+	
+	/* PID 1 */
+	/* Cálculo del error */											// (->) Selección de elemento con puntero.
+	error = (share_buff.pid1.input - share_buff.pid1.setpoint);
+	
+	/* Cálculo de la parte Proporcional */
+	p_f = share_buff.pid1.Kp_f * error;
+	
+	/* Cálculo de la parte Integral */
+	share_buff.pid1.int_err += (share_buff.pid1.Ki_f * error) >> SHIFT;
+	
+	/* Cálculo de la parte Derivativa */
+	d_f = share_buff.pid1.Kd_f * (share_buff.pid1.output - share_buff.pid1.last_output);
+	
+	/* Suma total de la salida PID */
+	output_f = p_f + share_buff.pid1.int_err + d_f;
+	output = output_f >> SHIFT;
+	
+	/* Establecimieto de la salida PID, comprobación min/max de la salida */
+	if (output < share_buff.pid1.min_output) output = share_buff.pid1.min_output;
+	if (output > share_buff.pid1.max_output) output = share_buff.pid1.max_output;
+	
+	share_buff.pid1.last_output = share_buff.pid1.output;
+	share_buff.pid1.output = share_buff.pid1.max_output - output;
+	
+	/* PID 2 */
+	/* Cálculo del error */											// (->) Selección de elemento con puntero.
+	error = (share_buff.pid2.input - share_buff.pid2.setpoint);
+	
+	/* Cálculo de la parte Proporcional */
+	p_f = share_buff.pid2.Kp_f * error;
+	
+	/* Cálculo de la parte Integral */
+	share_buff.pid2.int_err += (share_buff.pid2.Ki_f * error) >> SHIFT;
+	
+	/* Cálculo de la parte Derivativa */
+	d_f = share_buff.pid2.Kd_f * (share_buff.pid2.output - share_buff.pid2.last_output);
+	
+	/* Suma total de la salida PID */
+	output_f = p_f + share_buff.pid2.int_err + d_f;
+	output = output_f >> SHIFT;
+	
+	/* Establecimieto de la salida PID, comprobación min/max de la salida */
+	if (output < share_buff.pid2.min_output) output = share_buff.pid2.min_output;
+	if (output > share_buff.pid2.max_output) output = share_buff.pid2.max_output;
+	
+	share_buff.pid2.last_output = share_buff.pid2.output;
+	share_buff.pid2.output = share_buff.pid2.max_output - output;
+	
+	/* Fin del conteo */
+	PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
+	ncycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;       // Copio el número de ciclos.
+	
+	if (share_buff.cycles.sum <= 4000000000)            // Evita el desbordamiento del dato sum (unsigned int).
+	{
+		share_buff.cycles.sum += ncycles;
+		share_buff.cycles.med = share_buff.cycles.sum / (share_buff.cycles.loops + 1);		// Le sumo 1 porque shared_buff.loops se actualiza después al final del bucle.
+		share_buff.cycles.loops += 1;
+	};
+	
+	if (ncycles > share_buff.cycles.max) share_buff.cycles.max = ncycles;
+	if (ncycles < share_buff.cycles.min) share_buff.cycles.min = ncycles;
+
+	
+/*
+ * init_pid
+ */
+void init_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, volatile struct cycles_data* cycles) {
+	/* Cycles */
     	share_buff.cycles.loops = 0;
-	share_buff.cycles.min = 65535;
+	share_buff.cycles.min = 1000;
 	share_buff.cycles.med = 0;
 	share_buff.cycles.max = 0;
 	share_buff.cycles.sum = 0;
-	
+	/* PID 1 */
 	share_buff.pid1.Kp_f = 500;
 	share_buff.pid1.Ki_f = 200;
 	share_buff.pid1.Kd_f = 200;
 	share_buff.pid1.int_err = 0;
 	
-	share_buff.pid1.max_output = 0x1000; // Decimal 4096. Es el periodo del módulo eCAP para convertir en PWM. (Máximo ciclo de trabajo)
+	share_buff.pid1.max_output = 0x100000; // Decimal 4096. Es el periodo del módulo eCAP para convertir en PWM. (Máximo ciclo de trabajo)
 	share_buff.pid1.min_output = 0;
 	
 	share_buff.pid1.setpoint = 3000;
 	
 	share_buff.pid1.input = 0;
 	share_buff.pid1.output = 0;
-	
+	/* PID 2 */
 	share_buff.pid2.Kp_f = 500;
-	share_buff.pid2.Ki_f = 200;
-	share_buff.pid2.Kd_f = 200;
+	share_buff.pid2.Ki_f = 400;
+	share_buff.pid2.Kd_f = 100;
 	share_buff.pid2.int_err = 0;
 	
 	share_buff.pid2.max_output = 0x1000; // Decimal 4096. Es el periodo del módulo eCAP para convertir en PWM. (Máximo ciclo de trabajo)
@@ -124,81 +217,4 @@ void main(void) {
 	
 	share_buff.pid2.input = 0;
 	share_buff.pid2.output = 0;
-	
-    /* Bucle principal */
-	while(1) {    // Modificar salida del bucle con algún comando
-		
-		int p_f, d_f, ncycles;
-		int output_f, output, error;
-		ncycles = 0;
-		
-		/* Inicio del conteo de ciclo del segmento de código */
-		PRU0_CTRL.CTRL_bit.CTR_EN = 0;               // Desactivo el contador y lo limpio.
-		PRU0_CTRL.CYCLE_bit.CYCLECOUNT = 0xFFFFFFFF;
-		PRU0_CTRL.CTRL_bit.CTR_EN = 1;               // Inicio del conteo.
-		
-		/* PID 1 */
-		/* Cálculo del error */											// (->) Selección de elemento con puntero.
-		error = (share_buff.pid1.input - share_buff.pid1.setpoint);
-		
-		/* Cálculo de la parte Proporcional */
-		p_f = share_buff.pid1.Kp_f * error;
-		
-		/* Cálculo de la parte Integral */
-		share_buff.pid1.int_err += (share_buff.pid1.Ki_f * error) >> SHIFT;
-		
-		/* Cálculo de la parte Derivativa */
-		d_f = share_buff.pid1.Kd_f * (share_buff.pid1.output - share_buff.pid1.last_output);
-		
-		/* Suma total de la salida PID */
-		output_f = p_f + share_buff.pid1.int_err + d_f;
-		output = output_f >> SHIFT;
-		
-		/* Establecimieto de la salida PID, comprobación min/max de la salida */
-		if (output < share_buff.pid1.min_output) output = share_buff.pid1.min_output;
-		if (output > share_buff.pid1.max_output) output = share_buff.pid1.max_output;
-		
-		share_buff.pid1.last_output = share_buff.pid1.output;
-		share_buff.pid1.output = share_buff.pid1.max_output - output;
-		
-		/* PID 2 */
-		/* Cálculo del error */											// (->) Selección de elemento con puntero.
-		error = (share_buff.pid2.input - share_buff.pid2.setpoint);
-		
-		/* Cálculo de la parte Proporcional */
-		p_f = share_buff.pid2.Kp_f * error;
-		
-		/* Cálculo de la parte Integral */
-		share_buff.pid2.int_err += (share_buff.pid2.Ki_f * error) >> SHIFT;
-		
-		/* Cálculo de la parte Derivativa */
-		d_f = share_buff.pid2.Kd_f * (share_buff.pid2.output - share_buff.pid2.last_output);
-		
-		/* Suma total de la salida PID */
-		output_f = p_f + share_buff.pid2.int_err + d_f;
-		output = output_f >> SHIFT;
-		
-		/* Establecimieto de la salida PID, comprobación min/max de la salida */
-		if (output < share_buff.pid2.min_output) output = share_buff.pid2.min_output;
-		if (output > share_buff.pid2.max_output) output = share_buff.pid2.max_output;
-		
-		share_buff.pid2.last_output = share_buff.pid2.output;
-		share_buff.pid2.output = share_buff.pid2.max_output - output;
-		
-		/* Fin del conteo */
-		PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
-		ncycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;       // Copio el número de ciclos.
-		
-		if (share_buff.cycles.sum <= 2000000000)            // Evita el desbordamiento del dato sum (unsigned int).
-		{
-		share_buff.cycles.loops = loop;
-		share_buff.cycles.sum += ncycles;
-		share_buff.cycles.med = share_buff.cycles.sum / (share_buff.cycles.loops + 1);			// Le sumo 1 porque shared_buff.loops se actualiza después al final del bucle.
-		};
-		
-		if (ncycles > share_buff.cycles.max) share_buff.cycles.max = ncycles;
-		if (ncycles < share_buff.cycles.min) share_buff.cycles.min = ncycles;
-
-		loop += 1;                       // Conteo del número de ciclos producidos.
-	}
 }
