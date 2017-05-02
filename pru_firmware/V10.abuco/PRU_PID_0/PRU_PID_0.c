@@ -129,7 +129,7 @@ void main(void) {
 	while(1) {    // Modificar salida del bucle con algún comando
 		
 		int p_f, d_f, ncycles;
-		short output_f, output, error;
+		int output_f, output, error;
 		ncycles = 0;
 		
 		/* Inicio del conteo de ciclo del segmento de código */
