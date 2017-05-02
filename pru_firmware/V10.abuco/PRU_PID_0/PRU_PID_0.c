@@ -61,7 +61,7 @@ struct pid_data {
 												// y así se forma la comunicación entre ambas.
 
 struct cycles_data {
-	unsigned int min, med, max, sum, loops;
+	int min, med, max, sum, loops;
 };
 												
 /* Estructura del bloque de memoria compartida */
@@ -170,7 +170,7 @@ void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, 
 	PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
 	ncycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;       // Copio el número de ciclos.
 	
-	if (cycles->sum <= 4000000000)            // Evita el desbordamiento del dato sum (unsigned int).
+	if (cycles->sum <= 2000000000)            // Evita el desbordamiento del dato sum (unsigned int).
 	{
 		cycles->sum += ncycles;
 		cycles->med = cycles->sum / (cycles->loops + 1);		// Le sumo 1 porque shared_buff.loops se actualiza después al final del bucle.
