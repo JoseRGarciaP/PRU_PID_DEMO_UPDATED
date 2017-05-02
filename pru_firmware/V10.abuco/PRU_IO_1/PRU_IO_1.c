@@ -53,7 +53,7 @@ struct pid_data {
 												// y así se forma la comunicación entre ambas.
 
 struct cycles_data {
-	int min, med, max, sum, loops;
+	unsigned int min, med, max, sum, loops;
 };
 												
 /* Estructura del bloque de memoria compartida */
@@ -411,133 +411,141 @@ void rpmsg_isr(volatile struct pid_data* pid1, volatile struct pid_data* pid2, v
 													// se cargan en rpunit->msg.
     /* Comprueba comando */
     switch(rpunit->cmd) {
+		    
 		
-	/* Comandos del PID 1 */
-		
-    /* Establece setpoint */
-    case ('s'^'p'^'d'):							// 0x67
-        pid1->setpoint = rpunit->msg;
-        rpunit->msg = pid1->setpoint;
-        break;
-    /* Establece Kp */
-    case ('k'^'p'^'d'):							// 0x7F
-        pid1->Kp_f = rpunit->msg;
-        rpunit->msg = pid1->Kp_f;
-        break;
-    /* Establece Ki */
-    case ('k'^'i'^'d'):							// 0x66
-        pid1->Ki_f = rpunit->msg;
-        rpunit->msg = pid1->Ki_f;
-        break;
-    /* Establece Kd */
-    case ('k'^'d'^'d'):							// 0x6B
-        pid1->Kd_f = rpunit->msg;
-        rpunit->msg = pid1->Kd_f;
-        break;
-    /* Establecer salida PWM */
-    case ('o'^'d'):								// 0x0B
-        pid1->output = rpunit->msg;
-        rpunit->msg = pid1->output;
-        break;
-    /* Leer setpoint */
-    case ('r'^'s'^'d'):							// 0x65
-        rpunit->msg = pid1->setpoint;
-        break;
-    /* Leer Kp */
-    case ('r'^'k'^'p'^'d'):						// 0x0D
-        rpunit->msg = pid1->Kp_f;
-        break;
-    /* Leer Ki */
-    case ('r'^'k'^'i'^'d'):						// 0x14
-        rpunit->msg = pid1->Ki_f;
-        break;
-    /* Leer Kd */
-    case ('r'^'k'^'d'^'d'):						// 0x19
-        rpunit->msg = pid1->Kd_f;
-        break;
-    /* Leer encoder RPM */
-    case ('r'^'e'^'d'):							// 0x73
-        rpunit->msg = pid1->input;
-        break;
-    /* Leer salida PWM */
-    case ('r'^'o'^'d'):							// 0x79
-        rpunit->msg = pid1->output;
-        break;
-		
-	/* Comandos del PID 2 */
-	
-	/* Establece setpoint */	
-	case ('s'^'p'^'i'):							// 0x6A
-        pid2->setpoint = rpunit->msg;
-        rpunit->msg = pid2->setpoint;
-        break;
-    /* Establece Kp */
-    case ('k'^'p'^'i'):							// 0x72
-        pid2->Kp_f = rpunit->msg;
-        rpunit->msg = pid2->Kp_f;
-        break;
-    /* Establece Ki */
-    case ('k'^'i'^'i'^'q'):						// 0x1A
-        pid2->Ki_f = rpunit->msg;
-        rpunit->msg = pid2->Ki_f;
-        break;
-    /* Establece Kd */
-    case ('k'^'d'^'i'^'q'):						// 0x17
-        pid2->Kd_f = rpunit->msg;
-        rpunit->msg = pid2->Kd_f;
-        break;
-    /* Establecer salida PWM */
-    case ('o'^'i'):								// 0x06
-        pid2->output = rpunit->msg;
-        rpunit->msg = pid2->output;
-        break;
-    /* Leer setpoint */
-    case ('r'^'s'^'i'):							// 0x68
-        rpunit->msg = pid2->setpoint;
-        break;
-    /* Leer Kp */
-    case ('r'^'k'^'p'^'i'):						// 0x00
-        rpunit->msg = pid2->Kp_f;
-        break;
-    /* Leer Ki */
-    case ('r'^'k'^'i'^'q'):						// 0x01
-        rpunit->msg = pid2->Ki_f;
-        break;
-    /* Leer Kd */
-    case ('r'^'k'^'d'^'q'):						// 0x0C
-        rpunit->msg = pid2->Kd_f;
-        break;
-    /* Leer encoder RPM */
-    case ('r'^'e'^'i'):							// 0x7E
-        rpunit->msg = pid2->input;
-        break;
-    /* Leer salida PWM */
-    case ('r'^'o'^'i'):							// 0x74
-        rpunit->msg = pid2->output;
-        break;
-	
-	/* Comandos del conteo de ciclos */
-	
-	/* Leer número medio de ciclos del PID */
-    case ('m'^'e'^'d'):						    // 0x6C
-        rpunit->msg = cycles->med;
-        break;
-	/* Leer número maximo de ciclos del PID */
-    case ('m'^'x'):							    // 0x15
-        rpunit->msg = cycles->max;
-        break;
-	/* Leer número mínimo de ciclos del PID */
-    case ('m'^'n'):								// 0x03
-        rpunit->msg = cycles->min;
-        break;
-	/* Leer suma total de los ciclos del PID */
-    case ('s'^'u'^'m'^'c'):						// 0x08
-        rpunit->msg = cycles->sum;
-        break;
-	/* Leer total de bucles */
-	case ('r'^'l'):							    // 0x1E
-        rpunit->msg = cycles->loops;
-        break;	
+		/* Comandos del PID 1 */
+
+	    /* Establece setpoint */
+	    case ('s'^'p'^'d'):							// 0x67
+		pid1->setpoint = rpunit->msg;
+		rpunit->msg = pid1->setpoint;
+		break;
+	    /* Establece Kp */
+	    case ('k'^'p'^'d'):							// 0x7F
+		pid1->Kp_f = rpunit->msg;
+		rpunit->msg = pid1->Kp_f;
+		break;
+	    /* Establece Ki */
+	    case ('k'^'i'^'d'):							// 0x66
+		pid1->Ki_f = rpunit->msg;
+		rpunit->msg = pid1->Ki_f;
+		break;
+	    /* Establece Kd */
+	    case ('k'^'d'^'d'):							// 0x6B
+		pid1->Kd_f = rpunit->msg;
+		rpunit->msg = pid1->Kd_f;
+		break;
+	    /* Establecer salida PWM */
+	    case ('o'^'d'):								// 0x0B
+		pid1->output = rpunit->msg;
+		rpunit->msg = pid1->output;
+		break;
+	    /* Leer setpoint */
+	    case ('r'^'s'^'d'):							// 0x65
+		rpunit->msg = pid1->setpoint;
+		break;
+	    /* Leer Kp */
+	    case ('r'^'k'^'p'^'d'):						// 0x0D
+		rpunit->msg = pid1->Kp_f;
+		break;
+	    /* Leer Ki */
+	    case ('r'^'k'^'i'^'d'):						// 0x14
+		rpunit->msg = pid1->Ki_f;
+		break;
+	    /* Leer Kd */
+	    case ('r'^'k'^'d'^'d'):						// 0x19
+		rpunit->msg = pid1->Kd_f;
+		break;
+	    /* Leer encoder RPM */
+	    case ('r'^'e'^'d'):							// 0x73
+		rpunit->msg = pid1->input;
+		break;
+	    /* Leer salida PWM */
+	    case ('r'^'o'^'d'):							// 0x79
+		rpunit->msg = pid1->output;
+		break;
+
+		/* Comandos del PID 2 */
+
+		/* Establece setpoint */	
+	    case ('s'^'p'^'i'):							// 0x6A
+		pid2->setpoint = rpunit->msg;
+		rpunit->msg = pid2->setpoint;
+		break;
+	    /* Establece Kp */
+	    case ('k'^'p'^'i'):							// 0x72
+		pid2->Kp_f = rpunit->msg;
+		rpunit->msg = pid2->Kp_f;
+		break;
+	    /* Establece Ki */
+	    case ('k'^'i'^'i'^'q'):						// 0x1A
+		pid2->Ki_f = rpunit->msg;
+		rpunit->msg = pid2->Ki_f;
+		break;
+	    /* Establece Kd */
+	    case ('k'^'d'^'i'^'q'):						// 0x17
+		pid2->Kd_f = rpunit->msg;
+		rpunit->msg = pid2->Kd_f;
+		break;
+	    /* Establecer salida PWM */
+	    case ('o'^'i'):								// 0x06
+		pid2->output = rpunit->msg;
+		rpunit->msg = pid2->output;
+		break;
+	    /* Leer setpoint */
+	    case ('r'^'s'^'i'):							// 0x68
+		rpunit->msg = pid2->setpoint;
+		break;
+	    /* Leer Kp */
+	    case ('r'^'k'^'p'^'i'):						// 0x00
+		rpunit->msg = pid2->Kp_f;
+		break;
+	    /* Leer Ki */
+	    case ('r'^'k'^'i'^'q'):						// 0x01
+		rpunit->msg = pid2->Ki_f;
+		break;
+	    /* Leer Kd */
+	    case ('r'^'k'^'d'^'q'):						// 0x0C
+		rpunit->msg = pid2->Kd_f;
+		break;
+	    /* Leer encoder RPM */
+	    case ('r'^'e'^'i'):							// 0x7E
+		rpunit->msg = pid2->input;
+		break;
+	    /* Leer salida PWM */
+	    case ('r'^'o'^'i'):							// 0x74
+		rpunit->msg = pid2->output;
+		break;
+
+		/* Comandos del conteo de ciclos */
+
+		/* Leer número medio de ciclos del PID */
+	    case ('m'^'e'^'d'):						    // 0x6C
+		rpunit->msg = cycles->med;
+		break;
+		/* Leer número maximo de ciclos del PID */
+	    case ('m'^'x'):							    // 0x15
+		rpunit->msg = cycles->max;
+		break;
+		/* Leer número mínimo de ciclos del PID */
+	    case ('m'^'n'):								// 0x03
+		rpunit->msg = cycles->min;
+		break;
+		/* Leer suma total de los ciclos del PID */
+	    case ('s'^'u'^'m'^'c'):						// 0x08
+		rpunit->msg = cycles->sum;
+		break;
+		/* Leer total de bucles */
+	    case ('r'^'l'):							    // 0x1E
+		rpunit->msg = cycles->loops;
+		break;
+		/* Resetea suma, media y loops para calcularlo de nuevo en ese momento */
+	    case ('r'^'s'^'t'):							    // 0x75
+		cycles->loops = 0;
+		cycles->med = 0;
+		cycles->sumc = 0;
+		break;
+		    
     }
     /* Envío de mensaje de vuelta al host */
     pru_rpmsg_send(transport, dst, src, &rpunit->msg, 4);
