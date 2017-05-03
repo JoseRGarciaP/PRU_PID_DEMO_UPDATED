@@ -39,11 +39,11 @@
 #include "resource_table_empty.h"
 
 
-/* Conversión "Float" */
-#define SHIFT    0x0E							// Se desplaza hacia la derecha 0x0E posiciones
-                                                // (14 decimales) para convertir el dato en punto flotante.
+// Conversión "Float".
+#define SHIFT    0x0E				// Se desplaza hacia la derecha 0x0E posiciones
+						// (14 decimales) para convertir el dato en punto flotante.
 
-/* Registros GPIO de las PRU */
+// Registros GPIO de las PRU.
 // Se define el registro R30 interno de la PRU de tipo volatile.
 // Escribir en el registro R30 controla los pines GPO.
 // Este registro es usado para los pines GPO de las PRUs y es usado para el parpadeo del LED.
@@ -51,7 +51,7 @@ volatile register uint32_t __R30;
 
 struct pid_data {
 	// Sintoniación PID.
-    	short Kp_f, Ki_f, Kd_f;
+	short Kp_f, Ki_f, Kd_f;
 	
 	// Controles PID.
 	short setpoint;
