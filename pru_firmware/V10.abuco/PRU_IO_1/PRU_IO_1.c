@@ -37,7 +37,7 @@
 #include "resource_table_1.h"
 
 
-/* Estructura de datos del PID compartida - asegurar que ambas estructuras coinciden con PRU 0 */
+// Estructura de datos del PID compartida - asegurar que ambas estructuras coinciden con PRU 0.
 struct pid_data {
 	// Sintoniación PID.
 	short Kp_f, Ki_f, Kd_f;
