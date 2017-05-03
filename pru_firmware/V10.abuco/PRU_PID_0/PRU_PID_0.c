@@ -180,36 +180,33 @@ void main(void) {
  * init_pid
  */
 void init_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, volatile struct cycles_data* cycles) {
+
+	/* PID 1 */
+	pid1->output = 0;
+	pid1->input = 0;
+	pid1->Kp_f = 500;
+	pid1->Ki_f = 200;
+	pid1->Kd_f = 200;
+	pid1->int_err = 0;
+	pid1->max_output = 0x1000; // Decimal 4096. Es el periodo del módulo eCAP para convertir en PWM. (Máximo ciclo de trabajo)
+	pid1->min_output = 0;
+	pid1->setpoint = 3000;
+	
+	/* PID 2 */
+	pid2->output = 0;
+	pid2->input = 0;
+	pid2->Kp_f = 500;
+	pid2->Ki_f = 400;
+	pid2->Kd_f = 100;
+	pid2->int_err = 0;
+	pid2->max_output = 0x1000; // Decimal 4096. Es el periodo del módulo eCAP para convertir en PWM. (Máximo ciclo de trabajo)
+	pid2->min_output = 0;
+	pid2->setpoint = 3000;
+	
 	/* Cycles */
     	cycles->loops = 0;
 	cycles->min = 1000;
 	cycles->med = 0;
 	cycles->max = 0;
 	cycles->sum = 0;
-	/* PID 1 */
-	pid1->Kp_f = 500;
-	pid1->Ki_f = 200;
-	pid1->Kd_f = 200;
-	pid1->int_err = 0;
-	
-	pid1->max_output = 0x1000; // Decimal 4096. Es el periodo del módulo eCAP para convertir en PWM. (Máximo ciclo de trabajo)
-	pid1->min_output = 0;
-	
-	pid1->setpoint = 3000;
-	
-	pid1->input = 0;
-	pid1->output = 0;
-	/* PID 2 */
-	pid2->Kp_f = 500;
-	pid2->Ki_f = 400;
-	pid2->Kd_f = 100;
-	pid2->int_err = 0;
-	
-	pid2->max_output = 0x1000; // Decimal 4096. Es el periodo del módulo eCAP para convertir en PWM. (Máximo ciclo de trabajo)
-	pid2->min_output = 0;
-	
-	pid2->setpoint = 3000;
-	
-	pid2->input = 0;
-	pid2->output = 0;
 }
