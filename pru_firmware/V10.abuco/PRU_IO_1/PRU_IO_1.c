@@ -39,22 +39,22 @@
 
 /* Estructura de datos del PID compartida - asegurar que ambas estructuras coinciden con PRU 0 */
 struct pid_data {
-    /* Sintoniación PID */
-    	short Kp_f, Ki_f, Kd_f;
-
-    /* Controles PID */
-    	short setpoint;
-    	int int_err;
-    	short input, output, last_output;
-    	short min_output, max_output;
-};												// Estas estructuras son compartidas entre las PRUs,
-												// y así se forma la comunicación entre ambas.
+	// Sintoniación PID.
+	short Kp_f, Ki_f, Kd_f;
+	
+	// Controles PID.
+	short setpoint;
+	int int_err;
+	short input, output, last_output;
+	short min_output, max_output;
+};							// Estas estructuras son compartidas entre las PRUs,
+							// y así se forma la comunicación entre ambas.
 
 struct cycles_data {
 	int min, med, max, sum, loops;
 };
 												
-/* Estructura del bloque de memoria compartida */
+// Estructura del bloque de memoria compartida.
 struct shared_mem {
 	volatile char init_flag;
 	volatile struct cycles_data cycles;
