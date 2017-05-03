@@ -23,9 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- //  This version was revised by Gregory Raven to be compatible with
- //  recent PRU RemoteProc framework which changed to System Events
- //  (was Mailboxes).
+ //  This version was revised by José R. García.
 
 #include <stdint.h>
 #include <limits.h>
@@ -166,7 +164,7 @@ void main(void) {
 	struct pru_rpmsg_transport transport;
 	uint16_t src, dst, len;
 	
-	// Permite el acceso al puerto OCP master por la PRU y así la PRU puede leer memorias externas.
+	// Permite el acceso al puerto OCP master por la PRU y así la PRU puede acceder a memorias externas.
 	CT_CFG.SYSCFG_bit.STANDBY_INIT = 0;
 	
 	// Inicializa el funcionamiento de los periféricos.
