@@ -56,9 +56,9 @@ struct cycles_data {
 												
 /* Estructura del bloque de memoria compartida */
 struct shared_mem {
-    	volatile char init_flag;
+	volatile char init_flag;
 	volatile struct cycles_data cycles;
-    	volatile struct pid_data pid1;
+	volatile struct pid_data pid1;
 	volatile struct pid_data pid2;
 };
 
