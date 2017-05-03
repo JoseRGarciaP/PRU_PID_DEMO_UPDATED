@@ -161,218 +161,225 @@ uint8_t payload[RPMSG_BUF_SIZE];
  * main.c
  */
 void main(void) {
-    /* Variables RPMsg */
-    struct pru_rpmsg_transport transport;
-    uint16_t src, dst, len;
-
-    /* Permite el acceso al puerto OCP master por la PRU y así la PRU puede leer memorias externas */
-    CT_CFG.SYSCFG_bit.STANDBY_INIT = 0;
-
-    /* Inicializa el funcionamiento de los periféricos */
-    init_eqep();       // Poner este primero ya que inicializa los relojes de los módulos PWMSS.
-    init_pwm();
-
-    /* Inicializa RPMsg */
-    init_rpmsg(&transport);
-
-    /* Establece init flag para indicar el comienzo del PID */
-    share_buff.init_flag = 1;
-
-    while (1) {
-        /* Obtiene los mensajes del espacio de usuario */
-        rpmsg_interrupt(&share_buff.pid1, &share_buff.pid2, &share_buff.cycles, &transport, payload, dst, src, len);
-
-        /* Establece la velocidad PWM (registro ACMP del eCAP) */
-        CT_ECAP.CAP2_bit.CAP2 = share_buff.pid1.output;
+	
+	/* Variables RPMsg */
+	struct pru_rpmsg_transport transport;
+	uint16_t src, dst, len;
+	
+	// Permite el acceso al puerto OCP master por la PRU y así la PRU puede leer memorias externas.
+	CT_CFG.SYSCFG_bit.STANDBY_INIT = 0;
+	
+	// Inicializa el funcionamiento de los periféricos.
+	init_eqep();
+	init_pwm();
+	
+	// Inicializa RPMsg.
+	init_rpmsg(&transport);
+	
+	// Establece init flag para indicar el comienzo del PID.
+	share_buff.init_flag = 1;
+	
+	while (1) {
+		
+		// Obtiene los mensajes del espacio de usuario.
+		rpmsg_interrupt(&share_buff.pid1, &share_buff.pid2, &share_buff.cycles, &transport, payload, dst, src, len);
+		
+		// Establece la velocidad PWM (registro ACMP del eCAP).
+		CT_ECAP.CAP2_bit.CAP2 = share_buff.pid1.output;
 		PWMSS2.ECAP_CAP2_bit.CAP2 = share_buff.pid2.output;
-//      CT_ECAP.CAP2_bit.CAP2 = 0x0AF0;  //  Esto fuerza la salida a un valor determinado PWM.
-//      PWMSS2.ECAP_CAP2_bit.CAP2 = 0x0AF0;
-
-        /* Guarda los ciclos de escritura esperando al evento de cambio */
-        if (PWMSS1.EQEP_QFLG & 0x0800) {
-            PWMSS1.EQEP_QCLR |= 0x0800;
-            share_buff.pid1.input = get_enc_rpm1();
-        }
+		//CT_ECAP.CAP2_bit.CAP2 = 0x0AF0;	// Esto fuerza la salida a un valor determinado PWM.
+		//PWMSS2.ECAP_CAP2_bit.CAP2 = 0x0AF0;
+		
+		// Guarda los ciclos de escritura esperando al evento de cambio.
+		if (PWMSS1.EQEP_QFLG & 0x0800) {
+			PWMSS1.EQEP_QCLR |= 0x0800;
+			share_buff.pid1.input = get_enc_rpm1();
+		}
 		if (PWMSS2.EQEP_QFLG & 0x0800) {
-            PWMSS2.EQEP_QCLR |= 0x0800;
-            share_buff.pid2.input = get_enc_rpm2();
-        }
-    }
+			PWMSS2.EQEP_QCLR |= 0x0800;
+			share_buff.pid2.input = get_enc_rpm2();
+		}
+	}
 }
 
 /*
  * Inicializa eQEP
  */
-void init_eqep() {															//Establecer otro periférico para el otro encoder.
-
-	// eQEP PWMSS1
-
-    /* Habilita la generación de la señal de reloj PWMSS1 */
-    while (!(CM_PER_EPWMSS1 & 0x2))
-        CM_PER_EPWMSS1 |= 0x2;
-
-    /* Establece valores por defecto en modo de cuadratura */
-    PWMSS1.EQEP_QDECCTL = 0x00;
-
-    /* Activa temporizador de unidad
-     * Activa bloqueo de captura en el tiempo de espera de la unidad
-     * Activa el contador de posición de cuadratura
-     * Activa la carga de software del contador de posición
-     * Resetea el contador de posición en el evento de tiempo de unidad para medir RPM
-     */
-    PWMSS1.EQEP_QEPCTL = 0x308E;
-
-    /* Establece preescalares para el timer de captura EQEP y UPEVNT */
-    /* Nota: La unidad de captura EQEP debe estar deshabilitada antes de cambiar los preescalares */
-    PWMSS1.EQEP_QCAPCTL = 0x0070;
-
-    /* Habilita captura EQEP */
-    PWMSS1.EQEP_QCAPCTL |= 0x8000;
-
-    /* Habilita la interrupción del tiempo de espera de la unidad */
-    PWMSS1.EQEP_QEINT |= 0x0800;
-
-    /* Borra el conteo del encoder */
-    PWMSS1.EQEP_QPOSCNT_bit.QPOSCNT = 0x00000000;
-
-    /* Establece el máximo conteo del encoder */
-    PWMSS1.EQEP_QPOSMAX_bit.QPOSMAX = UINT_MAX;
-
-    /* Borra el timer */
-    PWMSS1.EQEP_QUTMR_bit.QUTMR = 0x00000000;
-
-    /* Establece el periodo de conteo del timer de la unidad */
-    /*  QUPRD = Period * 100MHz */
-    PWMSS1.EQEP_QUPRD_bit.QUPRD = 0x007FFFFF; // (~1/12s) @ 100MHz
-
-    /* Borra todos los bits de interrupción */
-    PWMSS1.EQEP_QCLR = 0xFFFF;
+void init_eqep() {
 	
-	// eQEP PWMSS2
-
-	/* Habilita la generación de la señal de reloj PWMSS2 */
-    while (!(CM_PER_EPWMSS2 & 0x2))
-        CM_PER_EPWMSS2 |= 0x2;
-
-    /* Establece valores por defecto en modo de cuadratura */
-    PWMSS2.EQEP_QDECCTL = 0x00;
-
-    /* Activa temporizador de unidad
-     * Activa bloqueo de captura en el tiempo de espera de la unidad
-     * Activa el contador de posición de cuadratura
-     * Activa la carga de software del contador de posición
-     * Resetea el contador de posición en el evento de tiempo de unidad para medir RPM
-     */
-    PWMSS2.EQEP_QEPCTL = 0x308E;
-
-    /* Establece preescalares para el timer de captura EQEP y UPEVNT */
-    /* Nota: La unidad de captura EQEP debe estar deshabilitada antes de cambiar los preescalares */
-    PWMSS1.EQEP_QCAPCTL = 0x0070;
-
-    /* Habilita captura EQEP */
-    PWMSS2.EQEP_QCAPCTL |= 0x8000;
-
-    /* Habilita la interrupción del tiempo de espera de la unidad */
-    PWMSS2.EQEP_QEINT |= 0x0800;
-
-    /* Borra el conteo del encoder */
-    PWMSS2.EQEP_QPOSCNT_bit.QPOSCNT = 0x00000000;
-
-    /* Establece el máximo conteo del encoder */
-    PWMSS2.EQEP_QPOSMAX_bit.QPOSMAX = UINT_MAX;
-
-    /* Borra el timer */
-    PWMSS2.EQEP_QUTMR_bit.QUTMR = 0x00000000;
-
-    /* Establece el periodo de conteo del timer de la unidad */
-    /*  QUPRD = Period * 100MHz */
-    PWMSS2.EQEP_QUPRD_bit.QUPRD = 0x007FFFFF; // (~1/12s) @ 100MHz
-
-    /* Borra todos los bits de interrupción */
-    PWMSS2.EQEP_QCLR = 0xFFFF;
+	// eQEP PWMSS1.
+	
+	// Habilita la generación de la señal de reloj PWMSS1.
+	while (!(CM_PER_EPWMSS1 & 0x2))
+		CM_PER_EPWMSS1 |= 0x2;
+	
+	// Establece valores por defecto en modo de cuadratura.
+	PWMSS1.EQEP_QDECCTL = 0x00;
+	
+	/* Activa temporizador de unidad
+	* Activa bloqueo de captura en el tiempo de espera de la unidad
+	* Activa el contador de posición de cuadratura
+	* Activa la carga de software del contador de posición
+	* Resetea el contador de posición en el evento de tiempo de unidad para medir RPM.
+	*/
+	PWMSS1.EQEP_QEPCTL = 0x308E;
+	
+	// Establece preescalares para el timer de captura EQEP y UPEVNT.
+	// Nota: La unidad de captura EQEP debe estar deshabilitada antes de cambiar los preescalares.
+	PWMSS1.EQEP_QCAPCTL = 0x0070;
+	
+	// Habilita captura EQEP.
+	PWMSS1.EQEP_QCAPCTL |= 0x8000;
+	
+	// Habilita la interrupción del tiempo de espera de la unidad.
+	PWMSS1.EQEP_QEINT |= 0x0800;
+	
+	// Borra el conteo del encoder.
+	PWMSS1.EQEP_QPOSCNT_bit.QPOSCNT = 0x00000000;
+	
+	// Establece el máximo conteo del encoder.
+	PWMSS1.EQEP_QPOSMAX_bit.QPOSMAX = UINT_MAX;
+	
+	// Borra el timer.
+	PWMSS1.EQEP_QUTMR_bit.QUTMR = 0x00000000;
+	
+	// Establece el periodo de conteo del timer de la unidad.
+	// QUPRD = Period * 100MHz.
+	PWMSS1.EQEP_QUPRD_bit.QUPRD = 0x007FFFFF;	// (~1/12s) @ 100MHz
+	
+	// Borra todos los bits de interrupción.
+	PWMSS1.EQEP_QCLR = 0xFFFF;
+	
+	// eQEP PWMSS2.
+	
+	// Habilita la generación de la señal de reloj PWMSS2.
+	while (!(CM_PER_EPWMSS2 & 0x2))
+		CM_PER_EPWMSS2 |= 0x2;
+	
+	// Establece valores por defecto en modo de cuadratura.
+	PWMSS2.EQEP_QDECCTL = 0x00;
+	
+	/* Activa temporizador de unidad
+	* Activa bloqueo de captura en el tiempo de espera de la unidad
+	* Activa el contador de posición de cuadratura
+	* Activa la carga de software del contador de posición
+	* Resetea el contador de posición en el evento de tiempo de unidad para medir RPM.
+	*/
+	PWMSS2.EQEP_QEPCTL = 0x308E;
+	
+	// Establece preescalares para el timer de captura EQEP y UPEVNT.
+	// Nota: La unidad de captura EQEP debe estar deshabilitada antes de cambiar los preescalares.
+	PWMSS1.EQEP_QCAPCTL = 0x0070;
+	
+	// Habilita captura EQEP.
+	PWMSS2.EQEP_QCAPCTL |= 0x8000;
+	
+	// Habilita la interrupción del tiempo de espera de la unidad.
+	PWMSS2.EQEP_QEINT |= 0x0800;
+	
+	// Borra el conteo del encoder.
+	PWMSS2.EQEP_QPOSCNT_bit.QPOSCNT = 0x00000000;
+	
+	// Establece el máximo conteo del encoder.
+	PWMSS2.EQEP_QPOSMAX_bit.QPOSMAX = UINT_MAX;
+	
+	// Borra el timer.
+	PWMSS2.EQEP_QUTMR_bit.QUTMR = 0x00000000;
+	
+	// Establece el periodo de conteo del timer de la unidad.
+	// QUPRD = Period * 100MHz.
+	PWMSS2.EQEP_QUPRD_bit.QUPRD = 0x007FFFFF;	// (~1/12s) @ 100MHz
+	
+	// Borra todos los bits de interrupción.
+	PWMSS2.EQEP_QCLR = 0xFFFF;
 }
 
 /*
  * Inicia APWM
  */
-void init_pwm() {													// Establecer otro periférico para el otro motor.
-
-	// PRU_eCAP0 PWM
-
-    /* Habilita el modo APWM y en operación asíncrona; Establece la polaridad a activa alta */
-    CT_ECAP.ECCTL2 = 0x02C0;
-
-    /* Establece el número de ciclos de reloj en el periodo PWM (APRD) */
-    CT_ECAP.CAP1_bit.CAP1 = PERIOD_CYCLES;
-
-    /* Habilita el contador ECAP PWM Freerun */
-    CT_ECAP.ECCTL2 |= 0x0010;
-
-	// PWMSS2 eCAP2 PWM
-
-	/* Habilita el modo APWM y en operación asíncrona; Establece la polaridad a activa alta */
-    PWMSS2.ECAP_ECCTL2 = 0x02C0;
-
-    /* Establece el número de ciclos de reloj en el periodo PWM (APRD) */
-    PWMSS2.ECAP_CAP1_bit.CAP1 = PERIOD_CYCLES;
-
-    /* Habilita el contador ECAP PWM Freerun */
-    PWMSS2.ECAP_ECCTL2 |= 0x0010;
-
+void init_pwm() {
+	
+	// PRU_eCAP0 PWM.
+	
+	// Habilita el modo APWM y en operación asíncrona; Establece la polaridad a activa alta.
+	CT_ECAP.ECCTL2 = 0x02C0;
+	
+	// Establece el número de ciclos de reloj en el periodo PWM (APRD).
+	CT_ECAP.CAP1_bit.CAP1 = PERIOD_CYCLES;
+	
+	// Habilita el contador ECAP PWM Freerun.
+	CT_ECAP.ECCTL2 |= 0x0010;
+	
+	// PWMSS2 eCAP2 PWM.
+	
+	// Habilita el modo APWM y en operación asíncrona; Establece la polaridad a activa alta.
+	PWMSS2.ECAP_ECCTL2 = 0x02C0;
+	
+	// Establece el número de ciclos de reloj en el periodo PWM (APRD).
+	PWMSS2.ECAP_CAP1_bit.CAP1 = PERIOD_CYCLES;
+	
+	// Habilita el contador ECAP PWM Freerun.
+	PWMSS2.ECAP_ECCTL2 |= 0x0010;
 }
 
-//  get_enc_rpm()
-
+/*
+ * get_enc_rpm()
+ */
 int get_enc_rpm1() {
-    short rpm = 0;
-
-    /* Comprobación de errores de desbordamiento, encender el LED y reestablecer a 0 el RPM */
-    if (PWMSS1.EQEP_QEPSTS &= 0x0C) {
-        PWMSS1.EQEP_QEPSTS |= 0x0C;
-        __R30 |= 0x04;    // bit 2 en alto para encender el led asociado.
-        rpm = 0;
-    } else {
-        __R30 &= 0xFFFFFFFB;	 // bit 2 apagado.
-        rpm = (PWMSS1.EQEP_QPOSLAT * SAMPLES_PER_SEC * SEC_PER_MIN) / TICKS_PER_REV;
-    }
-
-    return rpm;
+	
+	short rpm = 0;
+	
+	// Comprobación de errores de desbordamiento, encender el LED y reestablecer a 0 el RPM.
+	if (PWMSS1.EQEP_QEPSTS &= 0x0C) {
+		PWMSS1.EQEP_QEPSTS |= 0x0C;
+		__R30 |= 0x04;	// bit 2 en alto para encender el led asociado.
+		rpm = 0;
+	} else {
+		__R30 &= 0xFFFFFFFB;	// bit 2 apagado.
+		rpm = (PWMSS1.EQEP_QPOSLAT * SAMPLES_PER_SEC * SEC_PER_MIN) / TICKS_PER_REV;
+	}
+	
+	return rpm;
 }
 
 int get_enc_rpm2() {
-    short rpm = 0;
-
-    /* Comprobación de errores de desbordamiento, encender el LED y reestablecer a 0 el RPM */
-    if (PWMSS2.EQEP_QEPSTS &= 0x0C) {
-        PWMSS2.EQEP_QEPSTS |= 0x0C;
-        __R30 |= 0x08;	 // bit 3 en alto para encender el led asociado.
-        rpm = 0;
-    } else {
-        __R30 &= 0xFFFFFFF7;	 // bit 3 apagado.
-        rpm = (PWMSS2.EQEP_QPOSLAT * SAMPLES_PER_SEC * SEC_PER_MIN) / TICKS_PER_REV;
-    }
-
-    return rpm;
+	
+	short rpm = 0;
+	
+	// Comprobación de errores de desbordamiento, encender el LED y reestablecer a 0 el RPM.
+	if (PWMSS2.EQEP_QEPSTS &= 0x0C) {
+		PWMSS2.EQEP_QEPSTS |= 0x0C;
+		__R30 |= 0x08;	// bit 3 en alto para encender el led asociado.
+		rpm = 0;
+	} else {
+		__R30 &= 0xFFFFFFF7;	// bit 3 apagado.
+		rpm = (PWMSS2.EQEP_QPOSLAT * SAMPLES_PER_SEC * SEC_PER_MIN) / TICKS_PER_REV;
+	}
+	
+	return rpm;
 }
-
-//  inicializacion rpmsg
-//  Ulilizando eventos del sistema en vez de mailboxes. 
+/*
+ * inicializacion rpmsg
+ * Ulilizando eventos del sistema en vez de mailboxes.
+ */
 void init_rpmsg(struct pru_rpmsg_transport* transport) {
+	
 	volatile uint8_t *status;
 
 	// Borra el estado de los eventos del sistema de PRU-ICSS que usará ARM para hacer el "kick".
-    CT_INTC.SICR_bit.STS_CLR_IDX = FROM_ARM_HOST;
+	CT_INTC.SICR_bit.STS_CLR_IDX = FROM_ARM_HOST;
 
-	/* Comprobación de que los drivers de Linux están preparados para la comunicación RPMsg */
+	// Comprobación de que los drivers de Linux están preparados para la comunicación RPMsg.
 	status = &resourceTable.rpmsg_vdev.status;
 	while (!(*status & VIRTIO_CONFIG_S_DRIVER_OK));
-
-	/* Inicializa la estructura de transporte RPMsg */
-    pru_rpmsg_init(transport, &resourceTable.rpmsg_vring0, &resourceTable.rpmsg_vring1, TO_ARM_HOST, FROM_ARM_HOST);
-
-    /* Crea los canales RPMsg entre la PRU y el espacio de usuario ARM usando la estructura de transporte. */
-    while (pru_rpmsg_channel(RPMSG_NS_CREATE, transport, CHAN_NAME, CHAN_DESC, CHAN_PORT) != PRU_RPMSG_SUCCESS);
-    while (pru_rpmsg_channel(RPMSG_NS_CREATE, transport, CHAN_NAME, CHAN_DESC_2, CHAN_PORT_2) != PRU_RPMSG_SUCCESS);
+	
+	// Inicializa la estructura de transporte RPMsg.
+	pru_rpmsg_init(transport, &resourceTable.rpmsg_vring0, &resourceTable.rpmsg_vring1, TO_ARM_HOST, FROM_ARM_HOST);
+	
+	// Crea los canales RPMsg entre la PRU y el espacio de usuario ARM usando la estructura de transporte.
+	while (pru_rpmsg_channel(RPMSG_NS_CREATE, transport, CHAN_NAME, CHAN_DESC, CHAN_PORT) != PRU_RPMSG_SUCCESS);
+	//while (pru_rpmsg_channel(RPMSG_NS_CREATE, transport, CHAN_NAME, CHAN_DESC_2, CHAN_PORT_2) != PRU_RPMSG_SUCCESS);
+	// No se necesitan dos canales. Se utilizará sólo el canal 30.
 }
 
 /*
@@ -380,18 +387,19 @@ void init_rpmsg(struct pru_rpmsg_transport* transport) {
  */
 void rpmsg_interrupt(volatile struct pid_data* pid1, volatile struct pid_data* pid2, volatile struct cycles_data* cycles, struct pru_rpmsg_transport *transport, uint8_t *payload,
         uint16_t src, uint16_t dst, uint16_t len) {
-    // Comprueba el bit 31 del registro R31 para ver si ARM ha mensajeado */
-    if(__R31 & HOST_INT){
-
-        /* Borra el estado de eventos */
-        CT_INTC.SICR_bit.STS_CLR_IDX = FROM_ARM_HOST;
-
-/* Recibe todos los mensajes disponibles, múltiples mensajes pueden ser enviados por vez */
-                /* Recibe los mensajes */
-                if(pru_rpmsg_receive(transport, &src, &dst, payload, &len) == PRU_RPMSG_SUCCESS){
-                    /* Servicio de la interrupción */
-                    rpmsg_isr(pid1, pid2, cycles, transport, payload, src, dst);
-                }
+	
+	// Comprueba el bit 31 del registro R31 para ver si ARM ha mensajeado.
+	if(__R31 & HOST_INT){
+		
+		// Borra el estado de eventos.
+		CT_INTC.SICR_bit.STS_CLR_IDX = FROM_ARM_HOST;
+		
+		// Recibe todos los mensajes disponibles, múltiples mensajes pueden ser enviados por vez.
+		// Recibe los mensajes.
+		if(pru_rpmsg_receive(transport, &src, &dst, payload, &len) == PRU_RPMSG_SUCCESS){
+			// Servicio de la interrupción.
+			rpmsg_isr(pid1, pid2, cycles, transport, payload, src, dst);
+		}
 	}
 }
 
@@ -400,153 +408,152 @@ void rpmsg_interrupt(volatile struct pid_data* pid1, volatile struct pid_data* p
  */
 void rpmsg_isr(volatile struct pid_data* pid1, volatile struct pid_data* pid2, volatile struct cycles_data* cycles, struct pru_rpmsg_transport *transport, uint8_t *payload,
         uint16_t src, uint16_t dst) {
-    struct rpmsg_unit* rpunit;
-
-    rpunit = (struct rpmsg_unit *) payload;           // Puntero al buffer de comando y datos, ambos vienen 
-													// correlativos en la dirección del puntero payload
-													// Se inicializa el puntero de la estructura struct rpmsg_unit con los valores del puntero payload del buffer.
-													// El primer byte contiene el puntero al dato del comando, este dato es un char con el código equivalente 
-													// al comando.
-													// Le siguen los bytes de los punteros del dato numerico del parámetro a cambiar, que es entero y 
-													// se cargan en rpunit->msg.
-    /* Comprueba comando */
-    switch(rpunit->cmd) {
-		    
+	
+	struct rpmsg_unit* rpunit;
+	
+	rpunit = (struct rpmsg_unit *) payload;		// Puntero al buffer de comando y datos, ambos vienen 
+							// correlativos en la dirección del puntero payload
+							// Se inicializa el puntero de la estructura struct rpmsg_unit con los valores del puntero payload del buffer.
+							// El primer byte contiene el puntero al dato del comando, este dato es un char con el código equivalente 
+							// al comando.
+							// Le siguen los bytes de los punteros del dato numerico del parámetro a cambiar, que es entero y 
+							// se cargan en rpunit->msg.
+	// Comprueba comando
+	switch(rpunit->cmd) {
+			
+		// Comandos del PID 1.
+		// Establece setpoint.
+		case ('s'^'p'^'d'):				// 0x67
+			pid1->setpoint = rpunit->msg;
+			rpunit->msg = pid1->setpoint;
+			break;
+		// Establece Kp.
+		case ('k'^'p'^'d'):				// 0x7F
+			pid1->Kp_f = rpunit->msg;
+			rpunit->msg = pid1->Kp_f;
+			break;
+		// Establece Ki.
+		case ('k'^'i'^'d'):				// 0x66
+			pid1->Ki_f = rpunit->msg;
+			rpunit->msg = pid1->Ki_f;
+			break;
+		// Establece Kd.
+		case ('k'^'d'^'d'):				// 0x6B
+			pid1->Kd_f = rpunit->msg;
+			rpunit->msg = pid1->Kd_f;
+			break;
+		// Establecer salida PWM.
+		case ('o'^'d'):					// 0x0B
+			pid1->output = rpunit->msg;
+			rpunit->msg = pid1->output;
+			break;
+		// Leer setpoint.
+		case ('r'^'s'^'d'):				// 0x65
+			rpunit->msg = pid1->setpoint;
+			break;
+		// Leer Kp.
+		case ('r'^'k'^'p'^'d'):				// 0x0D
+			rpunit->msg = pid1->Kp_f;
+			break;
+		// Leer Ki.
+		case ('r'^'k'^'i'^'d'):				// 0x14
+			rpunit->msg = pid1->Ki_f;
+			break;
+		// Leer Kd.
+		case ('r'^'k'^'d'^'d'):				// 0x19
+			rpunit->msg = pid1->Kd_f;
+			break;
+		// Leer encoder RPM.
+		case ('r'^'e'^'d'):				// 0x73
+			rpunit->msg = pid1->input;
+			break;
+		// Leer salida PWM.
+		case ('r'^'o'^'d'):				// 0x79
+			rpunit->msg = pid1->output;
+			break;
 		
-		/* Comandos del PID 1 */
-
-	    /* Establece setpoint */
-	    case ('s'^'p'^'d'):							// 0x67
-		pid1->setpoint = rpunit->msg;
-		rpunit->msg = pid1->setpoint;
-		break;
-	    /* Establece Kp */
-	    case ('k'^'p'^'d'):							// 0x7F
-		pid1->Kp_f = rpunit->msg;
-		rpunit->msg = pid1->Kp_f;
-		break;
-	    /* Establece Ki */
-	    case ('k'^'i'^'d'):							// 0x66
-		pid1->Ki_f = rpunit->msg;
-		rpunit->msg = pid1->Ki_f;
-		break;
-	    /* Establece Kd */
-	    case ('k'^'d'^'d'):							// 0x6B
-		pid1->Kd_f = rpunit->msg;
-		rpunit->msg = pid1->Kd_f;
-		break;
-	    /* Establecer salida PWM */
-	    case ('o'^'d'):								// 0x0B
-		pid1->output = rpunit->msg;
-		rpunit->msg = pid1->output;
-		break;
-	    /* Leer setpoint */
-	    case ('r'^'s'^'d'):							// 0x65
-		rpunit->msg = pid1->setpoint;
-		break;
-	    /* Leer Kp */
-	    case ('r'^'k'^'p'^'d'):						// 0x0D
-		rpunit->msg = pid1->Kp_f;
-		break;
-	    /* Leer Ki */
-	    case ('r'^'k'^'i'^'d'):						// 0x14
-		rpunit->msg = pid1->Ki_f;
-		break;
-	    /* Leer Kd */
-	    case ('r'^'k'^'d'^'d'):						// 0x19
-		rpunit->msg = pid1->Kd_f;
-		break;
-	    /* Leer encoder RPM */
-	    case ('r'^'e'^'d'):							// 0x73
-		rpunit->msg = pid1->input;
-		break;
-	    /* Leer salida PWM */
-	    case ('r'^'o'^'d'):							// 0x79
-		rpunit->msg = pid1->output;
-		break;
-
-		/* Comandos del PID 2 */
-
-		/* Establece setpoint */	
-	    case ('s'^'p'^'i'):							// 0x6A
-		pid2->setpoint = rpunit->msg;
-		rpunit->msg = pid2->setpoint;
-		break;
-	    /* Establece Kp */
-	    case ('k'^'p'^'i'):							// 0x72
-		pid2->Kp_f = rpunit->msg;
-		rpunit->msg = pid2->Kp_f;
-		break;
-	    /* Establece Ki */
-	    case ('k'^'i'^'i'^'q'):						// 0x1A
-		pid2->Ki_f = rpunit->msg;
-		rpunit->msg = pid2->Ki_f;
-		break;
-	    /* Establece Kd */
-	    case ('k'^'d'^'i'^'q'):						// 0x17
-		pid2->Kd_f = rpunit->msg;
-		rpunit->msg = pid2->Kd_f;
-		break;
-	    /* Establecer salida PWM */
-	    case ('o'^'i'):								// 0x06
-		pid2->output = rpunit->msg;
-		rpunit->msg = pid2->output;
-		break;
-	    /* Leer setpoint */
-	    case ('r'^'s'^'i'):							// 0x68
-		rpunit->msg = pid2->setpoint;
-		break;
-	    /* Leer Kp */
-	    case ('r'^'k'^'p'^'i'):						// 0x00
-		rpunit->msg = pid2->Kp_f;
-		break;
-	    /* Leer Ki */
-	    case ('r'^'k'^'i'^'q'):						// 0x01
-		rpunit->msg = pid2->Ki_f;
-		break;
-	    /* Leer Kd */
-	    case ('r'^'k'^'d'^'q'):						// 0x0C
-		rpunit->msg = pid2->Kd_f;
-		break;
-	    /* Leer encoder RPM */
-	    case ('r'^'e'^'i'):							// 0x7E
-		rpunit->msg = pid2->input;
-		break;
-	    /* Leer salida PWM */
-	    case ('r'^'o'^'i'):							// 0x74
-		rpunit->msg = pid2->output;
-		break;
-
-		/* Comandos del conteo de ciclos */
-
-		/* Leer número medio de ciclos del PID */
-	    case ('m'^'e'^'d'):						    // 0x6C
-		rpunit->msg = cycles->med;
-		break;
-		/* Leer número maximo de ciclos del PID */
-	    case ('m'^'x'):							    // 0x15
-		rpunit->msg = cycles->max;
-		break;
-		/* Leer número mínimo de ciclos del PID */
-	    case ('m'^'n'):								// 0x03
-		rpunit->msg = cycles->min;
-		break;
-		/* Leer suma total de los ciclos del PID */
-	    case ('s'^'u'^'m'^'c'):						// 0x08
-		rpunit->msg = cycles->sum;
-		break;
-		/* Leer total de bucles */
-	    case ('r'^'l'):							    // 0x1E
-		rpunit->msg = cycles->loops;
-		break;
-		/* Resetea suma, media y loops para calcularlo de nuevo en ese momento */
-	    case ('r'^'s'^'t'):							    // 0x75
-		cycles->loops = 0;
-		cycles->med = 0;
-		cycles->sum = 0;
-		break;
-		    
-    }
-    /* Envío de mensaje de vuelta al host */
-    pru_rpmsg_send(transport, dst, src, &rpunit->msg, 4);
+		// Comandos del PID 2.
+		// Establece setpoint.	
+		case ('s'^'p'^'i'):				// 0x6A
+			pid2->setpoint = rpunit->msg;
+			rpunit->msg = pid2->setpoint;
+			break;
+		// Establece Kp.
+		case ('k'^'p'^'i'):				// 0x72
+			pid2->Kp_f = rpunit->msg;
+			rpunit->msg = pid2->Kp_f;
+			break;
+		// Establece Ki.
+		case ('k'^'i'^'i'^'q'):				// 0x1A
+			pid2->Ki_f = rpunit->msg;
+			rpunit->msg = pid2->Ki_f;
+			break;
+		// Establece Kd.
+		case ('k'^'d'^'i'^'q'):				// 0x17
+			pid2->Kd_f = rpunit->msg;
+			rpunit->msg = pid2->Kd_f;
+			break;
+		// Establecer salida PWM.
+		case ('o'^'i'):					// 0x06
+			pid2->output = rpunit->msg;
+			rpunit->msg = pid2->output;
+			break;
+		// Leer setpoint.
+		case ('r'^'s'^'i'):				// 0x68
+			rpunit->msg = pid2->setpoint;
+			break;
+		// Leer Kp.
+		case ('r'^'k'^'p'^'i'):				// 0x00
+			rpunit->msg = pid2->Kp_f;
+			break;
+		// Leer Ki.
+		case ('r'^'k'^'i'^'q'):				// 0x01
+			rpunit->msg = pid2->Ki_f;
+			break;
+		// Leer Kd.
+		case ('r'^'k'^'d'^'q'):				// 0x0C
+			rpunit->msg = pid2->Kd_f;
+			break;
+		// Leer encoder RPM.
+		case ('r'^'e'^'i'):				// 0x7E
+			rpunit->msg = pid2->input;
+			break;
+		// Leer salida PWM.
+		case ('r'^'o'^'i'):				// 0x74
+			rpunit->msg = pid2->output;
+			break;
+		
+		// Comandos del conteo de ciclos.
+		// Leer número medio de ciclos del PID.
+		case ('m'^'e'^'d'):				// 0x6C
+			rpunit->msg = cycles->med;
+			break;
+		// Leer número maximo de ciclos del PID.
+		case ('m'^'x'):					// 0x15
+			rpunit->msg = cycles->max;
+			break;
+		// Leer número mínimo de ciclos del PID.
+		case ('m'^'n'):					// 0x03
+			rpunit->msg = cycles->min;
+			break;
+		// Leer suma total de los ciclos del PID.
+		case ('s'^'u'^'m'^'c'):				// 0x08
+			rpunit->msg = cycles->sum;
+			break;
+		// Leer total de bucles.
+		case ('r'^'l'):					// 0x1E
+			rpunit->msg = cycles->loops;
+			break;
+		// Resetea suma, media y loops para calcularlo de nuevo en ese momento.
+		case ('r'^'s'^'t'):				// 0x75
+			cycles->loops = 0;
+			cycles->med = 0;
+			cycles->sum = 0;
+			rpunit->msg = 1;	// Comprobación en la respuesta para ver que se ha realizado.
+			break;
+		
+	}
+	// Envío de mensaje de vuelta al host.
+	pru_rpmsg_send(transport, dst, src, &rpunit->msg, 4);	
 }
+
