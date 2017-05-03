@@ -30,6 +30,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+ //  This version was revised by José R. García.
  //  Tweaks to the PID parameters were implemented by Gregory Raven.
 
 #include <stdint.h>
@@ -100,8 +101,8 @@ void main(void) {
 	
 	init_pid(&share_buff.pid1, &share_buff.pid2, &share_buff.cycles);
 	
-    /* Bucle principal */
-	while(1) {    // Modificar salida del bucle con algún comando
+	/* Bucle principal */
+	while(1) {	// Modificar salida del bucle con algún comando
 		
 		ncycles = 0;
 
@@ -180,7 +181,7 @@ void main(void) {
  * init_pid
  */
 void init_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, volatile struct cycles_data* cycles) {
-
+	
 	/* PID 1 */
 	pid1->output = 0;
 	pid1->input = 0;
