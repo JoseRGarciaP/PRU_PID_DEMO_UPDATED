@@ -1,0 +1,39 @@
+/*
+ * Copyright (C) 2016 Texas Instruments Incorporated - http://www.ti.com/
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+
+&am33xx_pinmux {
+	pru_cape_bone_pins: pru_cape_bone_pins {
+		pinctrl-single,pins = <
+			/* Motor 1 */
+			/* PWM */
+			0x164	(PIN_OUTPUT_PULLDOWN | MUX_MODE3) /* eCAP0_pru PWM  P9->42 */
+			/* Encoder */
+			0x0D0	(PIN_INPUT_PULLDOWN | MUX_MODE2)  /* eQEP1A_in  P8->35 */
+			0x0D4	(PIN_INPUT_PULLDOWN | MUX_MODE2)  /* eQEP1B_in  P8->33 */
+			
+			/* Motor 2 */
+			/* PWM */
+			0x19c	(PIN_OUTPUT_PULLDOWN | MUX_MODE4) /* eCAP2 PWM	P9->28 */
+			/* Encoder */
+			0x0b0	(PIN_INPUT_PULLDOWN | MUX_MODE3) /* eQEP2A_in	P8->41 */
+			0x0b4	(PIN_INPUT_PULLDOWN | MUX_MODE3) /* eQEP2B_in	P8->42 */
+			
+			/* LED indicador 1 */
+			0x0a8   (MUX_MODE5)                       /* pr1_pru1_pru_r30_2	P8->43 */
+			/* LED indicador 2 */
+			0x0ac	(MUX_MODE5)						  /* pr1_pru1_pru_r30_3 P8->44 */
+			
+			// REPASAR LO DE LOS PULLDOWN
+		>;
+	};
+};
+
+&pruss {
+        pinctrl-names = "default";
+	pinctrl-0 = <&pru_cape_bone_pins>;
+};
