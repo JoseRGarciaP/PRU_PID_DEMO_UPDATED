@@ -184,18 +184,6 @@ void main(void) {
 		// Obtiene los mensajes del espacio de usuario.
 		rpmsg_interrupt(&share_buff.pid1, &share_buff.pid2, &share_buff.cycles, &transport, payload, dst, src, len);
 		
-		// Establece la velocidad PWM (registro ACMP del eCAP).
-		CT_ECAP.CAP2_bit.CAP2 = share_buff.pid1.output;
-		PWMSS2.ECAP_CAP2_bit.CAP2 = share_buff.pid2.output;
-		
-		// Guarda los ciclos de escritura esperando al evento de cambio.
-		if (PWMSS1.EQEP_QFLG & 0x0800) {
-			PWMSS1.EQEP_QCLR |= 0x0800;
-			share_buff.pid1.input = get_enc_rpm1();
-		}
-		if (PWMSS2.EQEP_QFLG & 0x0800) {
-			PWMSS2.EQEP_QCLR |= 0x0800;
-			share_buff.pid2.input = get_enc_rpm2();
 		}
 	}
 }
