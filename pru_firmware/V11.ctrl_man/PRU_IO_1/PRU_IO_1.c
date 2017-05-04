@@ -184,7 +184,6 @@ void main(void) {
 		// Obtiene los mensajes del espacio de usuario.
 		rpmsg_interrupt(&share_buff.pid1, &share_buff.pid2, &share_buff.cycles, &transport, payload, dst, src, len);
 		
-		}
 	}
 }
 
