@@ -100,8 +100,8 @@ void main(void) {
 	
 	while (!(share_buff.init_flag == 1));		// Permiso de PRU 1 para empezar el PID
 	
-	share_buff.ctrl_man = 'a';
 	init_pid(&share_buff.pid1, &share_buff.pid2, &share_buff.cycles);
+	share_buff.ctrl_man = 'a';
 	
 	// Bucle principal.
 	while(1) {
