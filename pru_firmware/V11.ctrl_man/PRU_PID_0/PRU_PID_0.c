@@ -125,7 +125,7 @@ void main(void) {
 			share_buff.pid1.int_err += (share_buff.pid1.Ki_f * error) >> SHIFT;
 
 			// Cálculo de la parte Derivativa.
-			d_f = share_buff.pid1.Kd_f * (share_buff.pid1.output - share_buff.pid1.last_output);
+			d_f = (int) share_buff.pid1.Kd_f * (share_buff.pid1.output - share_buff.pid1.last_output);
 
 			// Suma total de la salida PID.
 			output_f = p_f + share_buff.pid1.int_err + d_f;
@@ -149,7 +149,7 @@ void main(void) {
 			share_buff.pid2.int_err += (share_buff.pid2.Ki_f * error) >> SHIFT;
 
 			// Cálculo de la parte Derivativa.
-			d_f = share_buff.pid2.Kd_f * (share_buff.pid2.output - share_buff.pid2.last_output);
+			d_f = (int) share_buff.pid2.Kd_f * (share_buff.pid2.output - share_buff.pid2.last_output);
 
 			// Suma total de la salida PID.
 			output_f = p_f + share_buff.pid2.int_err + d_f;
