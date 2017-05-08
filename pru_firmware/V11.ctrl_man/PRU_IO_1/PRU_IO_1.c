@@ -409,6 +409,8 @@ void rpmsg_isr(volatile struct pid_data* pid1, volatile struct pid_data* pid2, v
 		// Cambio al modo automático.
 		case ('a'):						// 0x67
 			share_buff.ctrl_man = 'a';
+			share_buff.pid1.last_output = share_buff.pid1.output;	// Actualizo valores del PID.
+			share_buff.pid2.last_output = share_buff.pid2.output;
 			rpunit->msg = 1; 	// Comprobación en la respuesta para ver que se ha realizado.
 			break;
 		// Cambio al modo manual.
