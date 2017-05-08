@@ -89,6 +89,8 @@ volatile far struct shared_mem share_buff;         // Se define el símbolo shar
 /* Declaración de funciones, prototipo */
 void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, volatile struct cycles_data* cycles);    // Función de actualización del PID.
 void init_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, volatile struct cycles_data* cycles);      // Función de inicialización del PID.
+int get_enc_rpm1();		// Obtención de la velocidad por el encoder.
+int get_enc_rpm2(); 
 
 /*
  * main.c
@@ -232,3 +234,41 @@ void init_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, vo
 	cycles->max = 0;
 	cycles->sum = 0;
 }
+
+/*
+ * get_enc_rpm()
+ */
+int get_enc_rpm1() {
+	
+	short rpm = 0;
+	
+	// Comprobación de errores de desbordamiento, encender el LED y reestablecer a 0 el RPM.
+	if (PWMSS1.EQEP_QEPSTS &= 0x0C) {
+		PWMSS1.EQEP_QEPSTS |= 0x0C;
+		__R30 |= 0x04;	// bit 2 en alto para encender el led asociado.
+		rpm = 0;
+	} else {
+		__R30 &= 0xFFFFFFFB;	// bit 2 apagado.
+		rpm = (PWMSS1.EQEP_QPOSLAT * SAMPLES_PER_SEC * SEC_PER_MIN) / TICKS_PER_REV;
+	}
+	
+	return rpm;
+}
+
+int get_enc_rpm2() {
+	
+	short rpm = 0;
+	
+	// Comprobación de errores de desbordamiento, encender el LED y reestablecer a 0 el RPM.
+	if (PWMSS2.EQEP_QEPSTS &= 0x0C) {
+		PWMSS2.EQEP_QEPSTS |= 0x0C;
+		__R30 |= 0x08;	// bit 3 en alto para encender el led asociado.
+		rpm = 0;
+	} else {
+		__R30 &= 0xFFFFFFF7;	// bit 3 apagado.
+		rpm = (PWMSS2.EQEP_QPOSLAT * SAMPLES_PER_SEC * SEC_PER_MIN) / TICKS_PER_REV;
+	}
+	
+	return rpm;
+}
+
