@@ -228,7 +228,7 @@ void init_eqep() {
 	
 	// Establece el periodo de conteo del timer de la unidad.
 	// QUPRD = Period * 100MHz.
-	PWMSS1.EQEP_QUPRD_bit.QUPRD = 0x007FFFFF;	// (~1/12s) @ 100MHz
+	PWMSS1.EQEP_QUPRD_bit.QUPRD = 0x007FFFFF;	// (~1s/12) @ 100MHz
 	
 	// Borra todos los bits de interrupción.
 	PWMSS1.EQEP_QCLR = 0xFFFF;
@@ -271,7 +271,7 @@ void init_eqep() {
 	
 	// Establece el periodo de conteo del timer de la unidad.
 	// QUPRD = Period * 100MHz.
-	PWMSS2.EQEP_QUPRD_bit.QUPRD = 0x007FFFFF;	// (~1/12s) @ 100MHz
+	PWMSS2.EQEP_QUPRD_bit.QUPRD = 0x007FFFFF;	// (~1s/12) @ 100MHz
 	
 	// Borra todos los bits de interrupción.
 	PWMSS2.EQEP_QCLR = 0xFFFF;
