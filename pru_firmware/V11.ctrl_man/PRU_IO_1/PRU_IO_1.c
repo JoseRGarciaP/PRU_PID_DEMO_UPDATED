@@ -137,8 +137,6 @@ volatile register uint32_t __R31;
 // Declaración de funciones, prototipo.
 void init_eqep();                            // Inicialización del módulo eQEP, y relojes de PWMSS.
 void init_pwm();                             // Inicialización del módulo eCAP PWM.
-int get_enc_rpm1();                          // Obtención de la velocidad por el encoder.
-int get_enc_rpm2(); 
 void init_rpmsg(struct pru_rpmsg_transport* transport);   // Inicialización del bloque RPMsg.
 void rpmsg_interrupt(volatile struct pid_data* pid1, volatile struct pid_data* pid2, volatile struct cycles_data* cycles, struct pru_rpmsg_transport *transport, uint8_t *payload,
         uint16_t src, uint16_t dst, uint16_t len);    // Comprobación de las interrupciones generadas por ARM.
@@ -307,42 +305,7 @@ void init_pwm() {
 	PWMSS2.ECAP_ECCTL2 |= 0x0010;
 }
 
-/*
- * get_enc_rpm()
- */
-int get_enc_rpm1() {
-	
-	short rpm = 0;
-	
-	// Comprobación de errores de desbordamiento, encender el LED y reestablecer a 0 el RPM.
-	if (PWMSS1.EQEP_QEPSTS &= 0x0C) {
-		PWMSS1.EQEP_QEPSTS |= 0x0C;
-		__R30 |= 0x04;	// bit 2 en alto para encender el led asociado.
-		rpm = 0;
-	} else {
-		__R30 &= 0xFFFFFFFB;	// bit 2 apagado.
-		rpm = (PWMSS1.EQEP_QPOSLAT * SAMPLES_PER_SEC * SEC_PER_MIN) / TICKS_PER_REV;
-	}
-	
-	return rpm;
-}
 
-int get_enc_rpm2() {
-	
-	short rpm = 0;
-	
-	// Comprobación de errores de desbordamiento, encender el LED y reestablecer a 0 el RPM.
-	if (PWMSS2.EQEP_QEPSTS &= 0x0C) {
-		PWMSS2.EQEP_QEPSTS |= 0x0C;
-		__R30 |= 0x08;	// bit 3 en alto para encender el led asociado.
-		rpm = 0;
-	} else {
-		__R30 &= 0xFFFFFFF7;	// bit 3 apagado.
-		rpm = (PWMSS2.EQEP_QPOSLAT * SAMPLES_PER_SEC * SEC_PER_MIN) / TICKS_PER_REV;
-	}
-	
-	return rpm;
-}
 /*
  * inicializacion rpmsg
  * Ulilizando eventos del sistema en vez de mailboxes.
