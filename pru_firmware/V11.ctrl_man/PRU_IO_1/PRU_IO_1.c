@@ -295,6 +295,10 @@ void init_pwm() {
 	
 	// PWMSS2 eCAP2 PWM.
 	
+	// Habilita la generación de la señal de reloj PWMSS2.
+	while (!(CM_PER_EPWMSS2 & 0x2))
+		CM_PER_EPWMSS2 |= 0x2;
+	
 	// Habilita el modo APWM y en operación asíncrona; Establece la polaridad a activa alta.
 	PWMSS2.ECAP_ECCTL2 = 0x02C0;
 	
