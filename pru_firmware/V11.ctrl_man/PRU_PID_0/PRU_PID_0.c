@@ -186,7 +186,7 @@ void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2) 
 	if (output < pid1->min_output) output = pid1->min_output;
 	if (output > pid1->max_output) output = pid1->max_output;
 
-	pid1->last_output = spid1->output;
+	pid1->last_output = pid1->output;
 	pid1->output = pid1->max_output - output;
 
 	// PID 2.
