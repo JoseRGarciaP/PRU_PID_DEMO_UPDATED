@@ -286,7 +286,7 @@ int get_enc_rpm2() {
 		rpm = 0;
 	} else {
 		__R30 &= 0xFFFFFFF7;	// bit 3 apagado.
-		rpm = (PWMSS2.EQEP_QPOSLAT * SAMPLES_PER_SEC * SEC_PER_MIN) / TICKS_PER_REV;
+		rpm = ( (int) PWMSS2.EQEP_QPOSLAT * SAMPLES_PER_SEC * SEC_PER_MIN) / TICKS_PER_REV;
 	}
 	
 	return rpm;
