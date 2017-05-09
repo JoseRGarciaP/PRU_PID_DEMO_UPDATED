@@ -57,8 +57,8 @@ struct pid_data {
 	
 	// Controles PID.
 	short setpoint;
-	int int_err;
-	short input, output, last_output;
+	int int_err, input;
+	short output, last_output;
 	short min_output, max_output;
 };						// Estas estructuras son compartidas entre las PRUs,
 						// y así se forma la comunicación entre ambas.
@@ -260,7 +260,7 @@ void init_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, vo
  */
 int get_enc_rpm1() {
 	
-	short rpm;
+	int rpm;
 	
 	// Comprobación de errores de desbordamiento, encender el LED y reestablecer a 0 el RPM.
 	if (PWMSS1.EQEP_QEPSTS &= 0x0C) {
@@ -277,7 +277,7 @@ int get_enc_rpm1() {
 
 int get_enc_rpm2() {
 	
-	short rpm;
+	int rpm;
 	
 	// Comprobación de errores de desbordamiento, encender el LED y reestablecer a 0 el RPM.
 	if (PWMSS2.EQEP_QEPSTS &= 0x0C) {
