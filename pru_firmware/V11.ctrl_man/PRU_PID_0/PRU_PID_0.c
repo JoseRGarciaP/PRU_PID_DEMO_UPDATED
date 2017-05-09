@@ -62,7 +62,8 @@ struct pid_data {
 						// y así se forma la comunicación entre ambas.
 
 struct cycles_data {
-	int min, med, max, sum, loops;
+	int sum, loops;
+	short min, med, max;
 };
 												
 // Estructura del bloque de memoria compartida.
@@ -80,6 +81,12 @@ struct shared_mem {
                                                    // sección ".share_buff" al símbolo share_buff
 volatile far struct shared_mem share_buff;         // Se define el símbolo shared_buff como una instancia de la estructura
                                                    // shared_mem, tipo volatile y far ( 16 bits superiores de la memoria)
+
+// Parámetros del Encoder de Cuadratura.
+#define TICKS_PER_REV       334 
+#define SAMPLES_PER_SEC     12
+#define SEC_PER_MIN         60
+
 /*
 #define LOOPS (*((volatile unsigned int *)0x4A301000))	// Defino la variable LOOP en el espacio de memoria de datos PRU RAM0.
                                                         // De esta manera la otra PRU también tendrá esta variable sin necesidad
@@ -87,7 +94,7 @@ volatile far struct shared_mem share_buff;         // Se define el símbolo shar
 */
 
 /* Declaración de funciones, prototipo */
-void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, volatile struct cycles_data* cycles);    // Función de actualización del PID.
+void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2);    // Función de actualización del PID.
 void init_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, volatile struct cycles_data* cycles);      // Función de inicialización del PID.
 int get_enc_rpm1();		// Obtención de la velocidad por el encoder.
 int get_enc_rpm2(); 
@@ -116,54 +123,9 @@ void main(void) {
 			PRU0_CTRL.CTRL_bit.CTR_EN = 1;               // Inicio del conteo.
 			ncycles = 0;
 			
-			// PID 1.
-			// Cálculo del error.
-			error = (share_buff.pid1.input - share_buff.pid1.setpoint);
-
-			// Cálculo de la parte Proporcional.
-			p_f = share_buff.pid1.Kp_f * error;
-
-			// Cálculo de la parte Integral.
-			share_buff.pid1.int_err += (share_buff.pid1.Ki_f * error) >> SHIFT;
-
-			// Cálculo de la parte Derivativa.
-			d_f = (int) share_buff.pid1.Kd_f * (share_buff.pid1.output - share_buff.pid1.last_output);
-
-			// Suma total de la salida PID.
-			output_f = p_f + share_buff.pid1.int_err + d_f;
-			output = output_f >> SHIFT;
-
-			// Establecimieto de la salida PID, comprobación min/max de la salida.
-			if (output < share_buff.pid1.min_output) output = share_buff.pid1.min_output;
-			if (output > share_buff.pid1.max_output) output = share_buff.pid1.max_output;
-
-			share_buff.pid1.last_output = share_buff.pid1.output;
-			share_buff.pid1.output = share_buff.pid1.max_output - output;
-
-			// PID 2.
-			// Cálculo del error.
-			error = (share_buff.pid2.input - share_buff.pid2.setpoint);
-
-			// Cálculo de la parte Proporcional.
-			p_f = share_buff.pid2.Kp_f * error;
-
-			// Cálculo de la parte Integral.
-			share_buff.pid2.int_err += (share_buff.pid2.Ki_f * error) >> SHIFT;
-
-			// Cálculo de la parte Derivativa.
-			d_f = (int) share_buff.pid2.Kd_f * (share_buff.pid2.output - share_buff.pid2.last_output);
-
-			// Suma total de la salida PID.
-			output_f = p_f + share_buff.pid2.int_err + d_f;
-			output = output_f >> SHIFT;
-
-			// Establecimieto de la salida PID, comprobación min/max de la salida.
-			if (output < share_buff.pid2.min_output) output = share_buff.pid2.min_output;
-			if (output > share_buff.pid2.max_output) output = share_buff.pid2.max_output;
-
-			share_buff.pid2.last_output = share_buff.pid2.output;
-			share_buff.pid2.output = share_buff.pid2.max_output - output;
-
+			// Actualiza PID.
+			update_pid(&share_buff.pid1, &share_buff.pid2);
+			
 			// Fin del conteo.
 			PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
 			ncycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;       // Copio el número de ciclos.
@@ -195,7 +157,63 @@ void main(void) {
 	}
 }
 
+
+/*
+ * update_pid
+ */
+void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, volatile struct cycles_data* cycles) {
+		
+	// PID 1.
+	// Cálculo del error.
+	error = (share_buff.pid1.input - share_buff.pid1.setpoint);
+
+	// Cálculo de la parte Proporcional.
+	p_f = share_buff.pid1.Kp_f * error;
+
+	// Cálculo de la parte Integral.
+	share_buff.pid1.int_err += (share_buff.pid1.Ki_f * error) >> SHIFT;
+
+	// Cálculo de la parte Derivativa.
+	d_f = (int) share_buff.pid1.Kd_f * (share_buff.pid1.output - share_buff.pid1.last_output);
+
+	// Suma total de la salida PID.
+	output_f = p_f + share_buff.pid1.int_err + d_f;
+	output = output_f >> SHIFT;
+
+	// Establecimieto de la salida PID, comprobación min/max de la salida.
+	if (output < share_buff.pid1.min_output) output = share_buff.pid1.min_output;
+	if (output > share_buff.pid1.max_output) output = share_buff.pid1.max_output;
+
+	share_buff.pid1.last_output = share_buff.pid1.output;
+	share_buff.pid1.output = share_buff.pid1.max_output - output;
+
+	// PID 2.
+	// Cálculo del error.
+	error = (share_buff.pid2.input - share_buff.pid2.setpoint);
+
+	// Cálculo de la parte Proporcional.
+	p_f = share_buff.pid2.Kp_f * error;
+
+	// Cálculo de la parte Integral.
+	share_buff.pid2.int_err += (share_buff.pid2.Ki_f * error) >> SHIFT;
+
+	// Cálculo de la parte Derivativa.
+	d_f = (int) share_buff.pid2.Kd_f * (share_buff.pid2.output - share_buff.pid2.last_output);
+
+	// Suma total de la salida PID.
+	output_f = p_f + share_buff.pid2.int_err + d_f;
+	output = output_f >> SHIFT;
+
+	// Establecimieto de la salida PID, comprobación min/max de la salida.
+	if (output < share_buff.pid2.min_output) output = share_buff.pid2.min_output;
+	if (output > share_buff.pid2.max_output) output = share_buff.pid2.max_output;
+
+	share_buff.pid2.last_output = share_buff.pid2.output;
+	share_buff.pid2.output = share_buff.pid2.max_output - output;
 	
+}
+
+
 /*
  * init_pid
  */
