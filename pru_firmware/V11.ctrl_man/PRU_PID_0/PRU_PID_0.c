@@ -36,6 +36,8 @@
 #include <stdint.h>
 #include <pru_cfg.h>
 #include <pru_ctrl.h>
+#include <pru_ecap.h>
+#include <sys_pwmss.h>
 #include "resource_table_empty.h"
 
 
@@ -258,7 +260,7 @@ void init_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, vo
  */
 int get_enc_rpm1() {
 	
-	short rpm = 0;
+	short rpm;
 	
 	// Comprobación de errores de desbordamiento, encender el LED y reestablecer a 0 el RPM.
 	if (PWMSS1.EQEP_QEPSTS &= 0x0C) {
@@ -275,7 +277,7 @@ int get_enc_rpm1() {
 
 int get_enc_rpm2() {
 	
-	short rpm = 0;
+	short rpm;
 	
 	// Comprobación de errores de desbordamiento, encender el LED y reestablecer a 0 el RPM.
 	if (PWMSS2.EQEP_QEPSTS &= 0x0C) {
