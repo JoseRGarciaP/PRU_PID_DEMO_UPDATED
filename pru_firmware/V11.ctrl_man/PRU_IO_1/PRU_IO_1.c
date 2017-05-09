@@ -51,7 +51,8 @@ struct pid_data {
 							// y así se forma la comunicación entre ambas.
 
 struct cycles_data {
-	int min, med, max, sum, loops;
+	int sum, loops;
+	short min, med, max;
 };
 												
 // Estructura del bloque de memoria compartida.
@@ -105,7 +106,7 @@ volatile register uint32_t __R31;
 // Configuración del módulo eQEP.
 
 // Parámetros del Encoder de Cuadratura.
-#define TICKS_PER_REV       40 
+#define TICKS_PER_REV       334 
 #define SAMPLES_PER_SEC     12
 #define SEC_PER_MIN         60
 
