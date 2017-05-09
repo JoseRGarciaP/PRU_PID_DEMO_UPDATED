@@ -107,7 +107,6 @@ int get_enc_rpm2();
 void main(void) {
 	
 	short ncycles;
-	int output_f, output, error, p_f, d_f;
 	
 	while (!(share_buff.init_flag == 1));		// Permiso de PRU 1 para empezar el PID
 	
@@ -164,7 +163,8 @@ void main(void) {
  * update_pid
  */
 void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2) {
-		
+	int output_f, output, error, p_f, d_f;
+	
 	// PID 1.
 	// Cálculo del error.
 	error = (pid1->input - pid1->setpoint);
