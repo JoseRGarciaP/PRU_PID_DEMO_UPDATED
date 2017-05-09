@@ -163,55 +163,55 @@ void main(void) {
 /*
  * update_pid
  */
-void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, volatile struct cycles_data* cycles) {
+void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2) {
 		
 	// PID 1.
 	// Cálculo del error.
-	error = (share_buff.pid1.input - share_buff.pid1.setpoint);
+	error = (pid1->input - pid1->setpoint);
 
 	// Cálculo de la parte Proporcional.
-	p_f = share_buff.pid1.Kp_f * error;
+	p_f = pid1->Kp_f * error;
 
 	// Cálculo de la parte Integral.
-	share_buff.pid1.int_err += (share_buff.pid1.Ki_f * error) >> SHIFT;
+	pid1->int_err += (pid1->Ki_f * error) >> SHIFT;
 
 	// Cálculo de la parte Derivativa.
-	d_f = (int) share_buff.pid1.Kd_f * (share_buff.pid1.output - share_buff.pid1.last_output);
+	d_f = (int) pid1->Kd_f * (pid1->output - pid1->last_output);
 
 	// Suma total de la salida PID.
-	output_f = p_f + share_buff.pid1.int_err + d_f;
+	output_f = p_f + pid1->int_err + d_f;
 	output = output_f >> SHIFT;
 
 	// Establecimieto de la salida PID, comprobación min/max de la salida.
-	if (output < share_buff.pid1.min_output) output = share_buff.pid1.min_output;
-	if (output > share_buff.pid1.max_output) output = share_buff.pid1.max_output;
+	if (output < pid1->min_output) output = pid1->min_output;
+	if (output > pid1->max_output) output = pid1->max_output;
 
-	share_buff.pid1.last_output = share_buff.pid1.output;
-	share_buff.pid1.output = share_buff.pid1.max_output - output;
+	pid1->last_output = spid1->output;
+	pid1->output = pid1->max_output - output;
 
 	// PID 2.
 	// Cálculo del error.
-	error = (share_buff.pid2.input - share_buff.pid2.setpoint);
+	error = (pid2->input - pid2->setpoint);
 
 	// Cálculo de la parte Proporcional.
-	p_f = share_buff.pid2.Kp_f * error;
+	p_f = pid2->Kp_f * error;
 
 	// Cálculo de la parte Integral.
-	share_buff.pid2.int_err += (share_buff.pid2.Ki_f * error) >> SHIFT;
+	pid2->int_err += (pid2->Ki_f * error) >> SHIFT;
 
 	// Cálculo de la parte Derivativa.
-	d_f = (int) share_buff.pid2.Kd_f * (share_buff.pid2.output - share_buff.pid2.last_output);
+	d_f = (int) pid2->Kd_f * (pid2->output - pid2->last_output);
 
 	// Suma total de la salida PID.
-	output_f = p_f + share_buff.pid2.int_err + d_f;
+	output_f = p_f + pid2->int_err + d_f;
 	output = output_f >> SHIFT;
 
 	// Establecimieto de la salida PID, comprobación min/max de la salida.
-	if (output < share_buff.pid2.min_output) output = share_buff.pid2.min_output;
-	if (output > share_buff.pid2.max_output) output = share_buff.pid2.max_output;
+	if (output < pid2->min_output) output = pid2->min_output;
+	if (output > pid2->max_output) output = pid2->max_output;
 
-	share_buff.pid2.last_output = share_buff.pid2.output;
-	share_buff.pid2.output = share_buff.pid2.max_output - output;
+	pid2->last_output = pid2->output;
+	pid2->output = pid2->max_output - output;
 	
 }
 
