@@ -44,8 +44,8 @@ struct pid_data {
 	
 	// Controles PID.
 	short setpoint;
-	int int_err;
-	short input, output, last_output;
+	int int_err, input;
+	short output, last_output;
 	short min_output, max_output;
 };							// Estas estructuras son compartidas entre las PRUs,
 							// y así se forma la comunicación entre ambas.
