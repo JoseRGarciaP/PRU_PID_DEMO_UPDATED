@@ -24,9 +24,9 @@
 			0x0b4	(PIN_INPUT_PULLDOWN | MUX_MODE3)	// eQEP2B_in, P8->42
 			
 			// LED indicador 1
-			0x0a8   (PIN_INPUT_PULLDOWN | MUX_MODE5)	// pr1_pru1_pru_r30_2, P8->43
+			0x0a8   (PIN_OUTPUT_PULLDOWN | MUX_MODE5)	// pr1_pru1_pru_r30_2, P8->43
 			// LED indicador 2
-			0x0ac	(PIN_INPUT_PULLDOWN | MUX_MODE5)	// pr1_pru1_pru_r30_3, P8->44
+			0x0ac	(PIN_OUTPUT_PULLDOWN | MUX_MODE5)	// pr1_pru1_pru_r30_3, P8->44
 			
 		>;
 	};
