@@ -133,7 +133,7 @@ void main(void) {
 			share_buff.pid2.input = get_enc_rpm2();
 		}
 		
-		// Comrprueba control automático para relizar el control.
+		// Comrprueba control automático para realizar el control.
 		if (share_buff.ctrl_man == 'a') {
 			
 			// Actualiza PID.
