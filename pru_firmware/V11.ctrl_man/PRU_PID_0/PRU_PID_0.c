@@ -116,36 +116,13 @@ void main(void) {
 	// Bucle principal.
 	while(1) {
 		
-		if (share_buff.ctrl_man == 'a') {
-			
-			// Inicio del conteo de ciclo del segmento de código.
-			PRU0_CTRL.CTRL_bit.CTR_EN = 0;               // Desactivo el contador (por seguridad) y lo limpio.
-			PRU0_CTRL.CYCLE_bit.CYCLECOUNT = 0xFFFFFFFF;
-			PRU0_CTRL.CTRL_bit.CTR_EN = 1;               // Inicio del conteo.
-			ncycles = 0;
-			
-			// Actualiza PID.
-			update_pid(&share_buff.pid1, &share_buff.pid2);
-			
-			// Fin del conteo.
-			PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
-			ncycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;       // Copio el número de ciclos.
-
-			if (share_buff.cycles.sum <= 2000000000)            // Evita el desbordamiento del dato sum (unsigned int).
-			{
-				share_buff.cycles.sum += ncycles;
-				share_buff.cycles.med = share_buff.cycles.sum / (share_buff.cycles.loops + 1);	// Le sumo 1 porque shared_buff.loops se actualiza después al final del bucle.
-				share_buff.cycles.loops += 1;
-			}
-
-			if (ncycles > share_buff.cycles.max) share_buff.cycles.max = ncycles;
-			if (ncycles < share_buff.cycles.min) share_buff.cycles.min = ncycles;
-		}
+		// Inicio del conteo de ciclo del segmento de código.
+		PRU0_CTRL.CTRL_bit.CTR_EN = 0;               // Desactivo el contador (por seguridad) y lo limpio.
+		PRU0_CTRL.CYCLE_bit.CYCLECOUNT = 0xFFFFFFFF;
+		PRU0_CTRL.CTRL_bit.CTR_EN = 1;               // Inicio del conteo.
+		ncycles = 0;
 		
-		// Establece la velocidad PWM (registro ACMP del eCAP).
-		CT_ECAP.CAP2_bit.CAP2 = share_buff.pid1.output;
-		PWMSS2.ECAP_CAP2_bit.CAP2 = share_buff.pid2.output;
-		
+		// Lee Velocidad.
 		// Guarda los ciclos de escritura esperando al evento de cambio.
 		if (PWMSS1.EQEP_QFLG & 0x0800) {
 			PWMSS1.EQEP_QCLR |= 0x0800;
@@ -154,7 +131,35 @@ void main(void) {
 		if (PWMSS2.EQEP_QFLG & 0x0800) {
 			PWMSS2.EQEP_QCLR |= 0x0800;
 			share_buff.pid2.input = get_enc_rpm2();
-		}	
+		}
+		
+		// Comrprueba control automático para relizar el control.
+		if (share_buff.ctrl_man == 'a') {
+			
+			// Actualiza PID.
+			update_pid(&share_buff.pid1, &share_buff.pid2);
+			
+		}
+		
+		// Establece la velocidad PWM (registro ACMP del eCAP).
+		CT_ECAP.CAP2_bit.CAP2 = share_buff.pid1.output;
+		PWMSS2.ECAP_CAP2_bit.CAP2 = share_buff.pid2.output;
+		
+		
+		// Fin del conteo.
+		PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
+		ncycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;       // Copio el número de ciclos.
+
+		if (share_buff.cycles.sum <= 2000000000)            // Evita el desbordamiento del dato sum (unsigned int).
+		{
+			share_buff.cycles.sum += ncycles;
+			share_buff.cycles.med = share_buff.cycles.sum / (share_buff.cycles.loops + 1);	// Le sumo 1 porque shared_buff.loops se actualiza después al final del bucle.
+			share_buff.cycles.loops += 1;
+		}
+
+		if (ncycles > share_buff.cycles.max) share_buff.cycles.max = ncycles;
+		if (ncycles < share_buff.cycles.min) share_buff.cycles.min = ncycles;
+		
 	}
 }
 
