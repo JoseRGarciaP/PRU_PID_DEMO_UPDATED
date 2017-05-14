@@ -173,7 +173,7 @@ void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2) 
 	error = (pid1->setpoint - pid1->input);
 
 	// Cálculo de la parte Proporcional.
-	p_f = pid1->Kp_f * error;
+	p_f = (int)pid1->Kp_f * error;
 
 	// Cálculo de la parte Integral.
 	pid1->int_err += ((int)pid1->Ki_f * error) >> SHIFT;
@@ -191,7 +191,7 @@ void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2) 
 	error = (pid2->setpoint - pid2->input);
 
 	// Cálculo de la parte Proporcional.
-	p_f = pid2->Kp_f * error;
+	p_f = (int)pid2->Kp_f * error;
 
 	// Cálculo de la parte Integral.
 	pid2->int_err += ((int)pid2->Ki_f * error) >> SHIFT;
