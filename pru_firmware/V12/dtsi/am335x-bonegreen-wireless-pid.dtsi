@@ -1,0 +1,40 @@
+/*
+ * Copyright (C) 2016 Texas Instruments Incorporated - http://www.ti.com/
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+
+&am33xx_pinmux {
+	pru_cape_bone_pins: pru_cape_bone_pins {
+		pinctrl-single,pins = <
+			// Motor 1
+			// PWM
+			0x0c8	(PIN_OUTPUT_PULLDOWN | MUX_MODE2)	// PWMSS1 ePWM A, P8->36
+			0x0cc	(PIN_OUTPUT_PULLDOWN | MUX_MODE2)	// PWMSS1 ePWM B, P8->34
+			// Encoder
+			0x0D0	(PIN_INPUT_PULLDOWN | MUX_MODE2) 	// eQEP1A_in, P8->35
+			0x0D4	(PIN_INPUT_PULLDOWN | MUX_MODE2) 	// eQEP1B_in, P8->33
+			
+			// Motor 2
+			// PWM
+			0x020	(PIN_OUTPUT_PULLDOWN | MUX_MODE4)	// PWMSS2 ePWM A, P8->19
+			0x024	(PIN_OUTPUT_PULLDOWN | MUX_MODE4)	// PWMSS2 ePWM B, P8->13
+			// Encoder
+			0x0b0	(PIN_INPUT_PULLDOWN | MUX_MODE3)	// eQEP2A_in, P8->41
+			0x0b4	(PIN_INPUT_PULLDOWN | MUX_MODE3)	// eQEP2B_in, P8->42
+			
+			// LED indicador 1
+			0x0a8   (PIN_OUTPUT_PULLDOWN | MUX_MODE5)	// pr1_pru1_pru_r30_2, P8->43
+			// LED indicador 2
+			0x0ac	(PIN_OUTPUT_PULLDOWN | MUX_MODE5)	// pr1_pru1_pru_r30_3, P8->44
+			
+		>;
+	};
+};
+
+&pruss {
+        pinctrl-names = "default";
+	pinctrl-0 = <&pru_cape_bone_pins>;
+};
