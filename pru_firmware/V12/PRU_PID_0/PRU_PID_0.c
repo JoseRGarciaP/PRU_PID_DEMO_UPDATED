@@ -216,11 +216,11 @@ void write_output(volatile struct pid_data* pid1, volatile struct pid_data* pid2
 
 	// Establecimiento de los sentidos de giro.
 	if (pid1->output > 0) {
-		PWMSS1.EPWM_CMPA = share_buff.pid1.output;		// R1 := PWM.	(Hacida adelante)
+		PWMSS1.EPWM_CMPA = pid1->output;		// R1 := PWM.	(Hacida adelante)
 		PWMSS1.EPWM_CMPB = 0;							// R2 := 0.
 	} else if (pid1->output < 0){
 		PWMSS1.EPWM_CMPA = 0;							// R1 := 0.		(Hacia atrás)
-		PWMSS1.EPWM_CMPB = - share_buff.pid1.output;	// R2 := PWM.
+		PWMSS1.EPWM_CMPB = - pid1->output;	// R2 := PWM.
 	} else if (pid1->output == 0) {
 		PWMSS1.EPWM_CMPA = 0;							// R1 := 0;		(Parado)
 		PWMSS1.EPWM_CMPB = 0;							// R2 := 0;
@@ -233,11 +233,11 @@ void write_output(volatile struct pid_data* pid1, volatile struct pid_data* pid2
 
 	// Establecimiento de los sentidos de giro.
 	if (pid2->output > 0) {
-		PWMSS2.EPWM_CMPA = share_buff.pid2.output;		// L1 := PWM.	(Hacida adelante)
+		PWMSS2.EPWM_CMPA = pid2->output;		// L1 := PWM.	(Hacida adelante)
 		PWMSS2.EPWM_CMPB = 0;							// L2 := 0.
 	} else if (pid2->output < 0){
 		PWMSS2.EPWM_CMPA = 0;							// L1 := 0.		(Hacia atrás)
-		PWMSS2.EPWM_CMPB = - share_buff.pid2.output;	// L2 := PWM.
+		PWMSS2.EPWM_CMPB = - pid2->output;	// L2 := PWM.
 	} else if (pid2->output == 0) {
 		PWMSS2.EPWM_CMPA = 0;							// L1 := 0;		(Parado)
 		PWMSS2.EPWM_CMPB = 0;							// L2 := 0;
