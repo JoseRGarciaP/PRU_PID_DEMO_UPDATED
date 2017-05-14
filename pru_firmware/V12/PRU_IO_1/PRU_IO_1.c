@@ -291,7 +291,7 @@ void init_pwm() {
 	PWMSS1.EPWM_TBPRD = PERIOD_CYCLES;	// Periodo del ciclo PWM.
 	PWMSS1.EPWM_TBPHS = 0;				// Registro de fase de TB a 0.
 	PWMSS1.EPWM_TBCNT = 0;				// Contador de TB a cero.
-	PWMSS1.EPWM_TBCTL = 0x030			// Up_count, shadow mode, phase disabled, TBCLK = SYSCLK.
+	PWMSS1.EPWM_TBCTL = 0x030;			// Up_count, shadow mode, phase disabled, TBCLK = SYSCLK.
 	PWMSS1.EPWM_CMPA = 0;
 	PWMSS1.EPWM_CMPB =  0;
 	PWMSS1.EPWM_CMPCTL = 0x000;			// Load on CTR = 0, shadow mode.
@@ -306,7 +306,7 @@ void init_pwm() {
 	PWMSS2.EPWM_TBPRD = PERIOD_CYCLES;	// Periodo del ciclo PWM.
 	PWMSS2.EPWM_TBPHS = 0;				// Registro de fase de TB a 0.
 	PWMSS2.EPWM_TBCNT = 0;				// Contador de TB a cero.
-	PWMSS2.EPWM_TBCTL = 0x030			// Up_count, shadow mode, phase disabled, TBCLK = SYSCLK.
+	PWMSS2.EPWM_TBCTL = 0x030;			// Up_count, shadow mode, phase disabled, TBCLK = SYSCLK.
 	PWMSS2.EPWM_CMPA = 0;
 	PWMSS2.EPWM_CMPB =  0;
 	PWMSS2.EPWM_CMPCTL = 0x000;			// Load on CTR = 0, shadow mode.
