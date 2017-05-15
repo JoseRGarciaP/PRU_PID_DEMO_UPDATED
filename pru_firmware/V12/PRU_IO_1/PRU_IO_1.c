@@ -292,9 +292,9 @@ void init_pwm() {
 	PWMSS1.EPWM_TBPHS = 0;				// Registro de fase de TB a 0.
 	PWMSS1.EPWM_TBCNT = 0;				// Contador de TB a cero.
 	PWMSS1.EPWM_TBCTL = 0x030;			// Up_count, shadow mode, phase disabled, TBCLK = SYSCLK.
+	PWMSS1.EPWM_CMPCTL = 0x000;			// Load on CTR = 0, shadow mode.
 	PWMSS1.EPWM_CMPA = 0;
 	PWMSS1.EPWM_CMPB =  0;
-	PWMSS1.EPWM_CMPCTL = 0x000;			// Load on CTR = 0, shadow mode.
 	PWMSS1.EPWM_AQCTLA = 0x012;			// Set on CNT = 0, Clear on CNT = CMPA.
 	PWMSS1.EPWM_AQCTLB = 0x102;		// Set on CNT = 0, Clear on CNT = CMPB.
 	
