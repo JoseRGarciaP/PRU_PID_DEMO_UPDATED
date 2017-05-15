@@ -166,7 +166,7 @@ void main(void) {
  */
 void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2) {
 	int output_f, p_f, d_f;
-	short error;
+	short error, output;
 	
 	// PID 1.
 	// Cálculo del error.
@@ -183,7 +183,16 @@ void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2) 
 
 	// Suma total de la salida PID.
 	output_f = p_f + pid1->int_err;
-	pid1->output = output_f >> SHIFT;
+	output = output_f >> SHIFT;
+	
+	// Establecimieto de la salida PID, comprobación min/max de la salida.
+	if (output < pid1->min_output) {
+		pid1->output = pid1->min_output;
+	} else if (output > pid1->max_output) {
+		pid1->output = pid1->max_output;
+	} else {
+		pid1->output = output;
+	}
 	
 
 	// PID 2.
@@ -209,11 +218,8 @@ void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2) 
  * write_output
  */
 void write_output(volatile struct pid_data* pid1, volatile struct pid_data* pid2) {
+	
 	// Salida 1.
-	// Establecimieto de la salida PID, comprobación min/max de la salida.
-	if (pid1->output < pid1->min_output) pid1->output = pid1->min_output;
-	if (pid1->output > pid1->max_output) pid1->output = pid1->max_output;
-
 	// Establecimiento de los sentidos de giro.
 	if (pid1->output > 0) {
 		PWMSS1.EPWM_CMPA = pid1->output;		// R1 := PWM.	(Hacida adelante)
