@@ -258,7 +258,7 @@ void init_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2, vo
 	pid2->input = 0;
 	
 	pid1->Kp_f = 500;	// 500
-	pid1->Ki_f = 900;	// 200
+	pid1->Ki_f = 200;	// 200
 	pid1->Kd_f = 0;
 	
 	pid2->Kp_f = 500;
