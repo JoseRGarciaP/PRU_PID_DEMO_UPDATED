@@ -93,14 +93,14 @@ volatile register uint32_t __R31;
 // Definición de registro Non-CT. Registro externo de la PRU (Clock Module Peripheral Registers).
 // Este registro CM_PER_EPWMSS1_CLKCTRL activa el reloj del modulo PWMSS1. 100 MHz max.
 #define CM_PER_EPWMSS1 (*((volatile unsigned int *)0x44E000CC))
-// Este registro CM_PER_EPWMSS0_CLKCTRL activa el reloj del modulo PWMSS0. 100 MHz max. PD_PER_L4LS_GCLK
+// Este registro CM_PER_EPWMSS0_CLKCTRL activa el reloj del modulo PWMSS0. 100 MHz max.
 #define CM_PER_EPWMSS0 (*((volatile unsigned int *)0x44E000D4))
 // Este registro CM_PER_EPWMSS2_CLKCTRL activa el reloj del modulo PWMSS2. 100 MHz max.
 #define CM_PER_EPWMSS2 (*((volatile unsigned int *)0x44E000D8))
 
 // Configuración del Módulo eCAP PWM.
 // Parámetro del periodo para la generación PWM.
-#define PERIOD_CYCLES       0xFFF                 // T + 1 ; T = 4095; ciclos de un periódo = 4096 decimal. A 100 MHz.
+#define PERIOD_CYCLES       4095                 // T + 1 ; T = 4095; ciclos de un periódo = 4096 decimal. A 100 MHz.
 
 // Configuración del módulo eQEP.
 
@@ -288,17 +288,15 @@ void init_pwm() {
 	while (!(CM_PER_EPWMSS1 & 0x2))
 		CM_PER_EPWMSS1 |= 0x2;
 	
-	PWMSS1.EPWM_TBCTL = 0x030;			// Up_count, shadow mode, phase disabled, TBCLK = SYSCLK.
 	PWMSS1.EPWM_TBPRD = PERIOD_CYCLES;		// Periodo del ciclo PWM.
 	PWMSS1.EPWM_TBPHS = 0;				// Registro de fase de TB a 0.
 	PWMSS1.EPWM_TBCNT = 0;				// Contador de TB a cero.
+	PWMSS1.EPWM_TBCTL = 0xC030;			// Up_count, shadow mode, phase disabled, TBCLK = SYSCLK.
 	PWMSS1.EPWM_CMPCTL = 0x000;			// Load on CTR = 0, shadow mode.
 	PWMSS1.EPWM_CMPA = 0;
 	PWMSS1.EPWM_CMPB =  0;
 	PWMSS1.EPWM_AQCTLA = 0x012;			// Set on CNT = 0, Clear on CNT = CMPA.
 	PWMSS1.EPWM_AQCTLB = 0x102;			// Set on CNT = 0, Clear on CNT = CMPB.
-	PWMSS1.EPWM_TBCTL = 0x030 | 0xC000;		// Free Run
-
 	
 	// PWMSS2 ePWM. (2 salidas)
 	
