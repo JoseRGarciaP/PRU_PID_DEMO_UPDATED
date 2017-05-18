@@ -61,6 +61,7 @@ struct shared_mem {
 	volatile struct cycles_data cycles;
 	volatile struct pid_data pid1;
 	volatile struct pid_data pid2;
+	volatile int reg_pwmss_ctrl;
 };
 
 
@@ -89,14 +90,18 @@ volatile register uint32_t __R30;
 // Escribir en el registro R31 genera interrupciones - ver las especificaciones del dispositivo TRM para más información.
 volatile register uint32_t __R31;
 
-// Configuración del Encoder de Cuadratura eQEP.
+// Configuración de los modulos PWMSS.
 // Definición de registro Non-CT. Registro externo de la PRU (Clock Module Peripheral Registers).
 // Este registro CM_PER_EPWMSS1_CLKCTRL activa el reloj del modulo PWMSS1. 100 MHz max.
-#define CM_PER_EPWMSS1 (*((volatile unsigned int *)0x44E000CC))
+#define CM_PER_EPWMSS1_CLKCTRL (*((volatile unsigned int *)0x44E000CC))
 // Este registro CM_PER_EPWMSS0_CLKCTRL activa el reloj del modulo PWMSS0. 100 MHz max.
-#define CM_PER_EPWMSS0 (*((volatile unsigned int *)0x44E000D4))
+#define CM_PER_EPWMSS0_CLKCTRL (*((volatile unsigned int *)0x44E000D4))
 // Este registro CM_PER_EPWMSS2_CLKCTRL activa el reloj del modulo PWMSS2. 100 MHz max.
-#define CM_PER_EPWMSS2 (*((volatile unsigned int *)0x44E000D8))
+#define CM_PER_EPWMSS2_CLKCTRL (*((volatile unsigned int *)0x44E000D8))
+
+// Este registro activa los contadores Time Clock para cada PWMSS.
+#define pwmss_ctrl (*((volatile unsigned int *)0x44E10664))
+
 
 // Configuración del Módulo eCAP PWM.
 // Parámetro del periodo para la generación PWM.
@@ -136,7 +141,7 @@ volatile register uint32_t __R31;
 
 // Declaración de funciones, prototipo.
 void init_eqep();                            // Inicialización del módulo eQEP, y relojes de PWMSS.
-void init_pwm();                             // Inicialización del módulo eCAP PWM.
+void init_epwm();                             // Inicialización del módulo ePWM.
 void init_rpmsg(struct pru_rpmsg_transport* transport);   // Inicialización del bloque RPMsg.
 void rpmsg_interrupt(volatile struct pid_data* pid1, volatile struct pid_data* pid2, volatile struct cycles_data* cycles, struct pru_rpmsg_transport *transport, uint8_t *payload,
         uint16_t src, uint16_t dst, uint16_t len);    // Comprobación de las interrupciones generadas por ARM.
@@ -167,9 +172,11 @@ void main(void) {
 	// Permite el acceso al puerto OCP master por la PRU y así la PRU puede acceder a memorias externas.
 	CT_CFG.SYSCFG_bit.STANDBY_INIT = 0;
 	
-	// Inicializa el funcionamiento de los periféricos.
+	// Inicializa el funcionamiento de los periféricos (habilitar reloj, habilitar TBCLKEN, y configuracion).
 	init_eqep();
-	init_pwm();
+	init_epwm();
+	
+	share_buff.reg_pwmss_ctrl = pwmss_ctrl;
 	
 	// Inicializa RPMsg.
 	init_rpmsg(&transport);
@@ -193,8 +200,14 @@ void init_eqep() {
 	// eQEP PWMSS1.
 	
 	// Habilita la generación de la señal de reloj PWMSS1.
-	while (!(CM_PER_EPWMSS1 & 0x2))
-		CM_PER_EPWMSS1 |= 0x2;
+	while (!(CM_PER_EPWMSS1_CLKCTRL & 0x2))
+		CM_PER_EPWMSS1_CLKCTRL |= 0x2;
+	
+	while (!(PWMSS1.SYSCONFIG & 0x28))
+		PWMSS1.SYSCONFIG |= 0x28;
+	
+	while (!(PWMSS1.CLKSTATUS & 0x8))
+		PWMSS1.CLKCONFIGS |= 0x8;	
 	
 	// Establece valores por defecto en modo de cuadratura.
 	PWMSS1.EQEP_QDECCTL = 0x00;
@@ -236,8 +249,14 @@ void init_eqep() {
 	// eQEP PWMSS2.
 	
 	// Habilita la generación de la señal de reloj PWMSS2.
-	while (!(CM_PER_EPWMSS2 & 0x2))
-		CM_PER_EPWMSS2 |= 0x2;
+	while (!(CM_PER_EPWMSS2_CLKCTRL & 0x2))
+		CM_PER_EPWMSS2_CLKCTRL |= 0x2;
+	
+	while (!(PWMSS2.SYSCONFIG & 0x28))
+		PWMSS2.SYSCONFIG |= 0x28;
+	
+	while (!(PWMSS2.CLKSTATUS & 0x8))
+		PWMSS2.CLKCONFIGS |= 0x8;
 	
 	// Establece valores por defecto en modo de cuadratura.
 	PWMSS2.EQEP_QDECCTL = 0x00;
@@ -280,28 +299,44 @@ void init_eqep() {
 /*
  * Inicia ePWM
  */
-void init_pwm() {
+void init_epwm() {
 	
 	// PWMSS1 ePWM. (2 salidas)
 	
 	// Habilita la generación de la señal de reloj PWMSS1.
-	while (!(CM_PER_EPWMSS1 & 0x2))
-		CM_PER_EPWMSS1 |= 0x2;
+	while (!(CM_PER_EPWMSS1_CLKCTRL & 0x2))
+		CM_PER_EPWMSS1_CLKCTRL |= 0x2;
+	
+	pwmss_ctrl |= 0x02;
+	
+	while (!(PWMSS1.SYSCONFIG & 0x28))
+		PWMSS1.SYSCONFIG |= 0x28;
+	
+	while (!(PWMSS1.CLKSTATUS & 0x40))
+		PWMSS1.CLKCONFIGS |= 0x40;
 	
 	PWMSS1.EPWM_TBPRD = PERIOD_CYCLES;		// Periodo del ciclo PWM.
 	PWMSS1.EPWM_TBPHS = 0;				// Registro de fase de TB a 0.
 	PWMSS1.EPWM_TBCNT = 0;				// Contador de TB a cero.
-	PWMSS1.EPWM_TBCTL = 0xC030;			// Up_count, shadow mode, phase disabled, TBCLK = SYSCLK.
-	PWMSS1.EPWM_CMPCTL = 0x000;			// Load on CTR = 0, shadow mode.
+	PWMSS1.EPWM_TBCTL = 0x030;			// Up_count, shadow mode, phase disabled, TBCLK = SYSCLK.
 	PWMSS1.EPWM_CMPA = 0;
 	PWMSS1.EPWM_CMPB =  0;
+	PWMSS1.EPWM_CMPCTL = 0x000;			// Load on CTR = 0, shadow mode.
 	PWMSS1.EPWM_AQCTLA = 0x012;			// Set on CNT = 0, Clear on CNT = CMPA.
 	PWMSS1.EPWM_AQCTLB = 0x102;			// Set on CNT = 0, Clear on CNT = CMPB.
 	
 	// PWMSS2 ePWM. (2 salidas)
 	
-	while (!(CM_PER_EPWMSS2 & 0x2))
-		CM_PER_EPWMSS2 |= 0x2;
+	while (!(CM_PER_EPWMSS2_CLKCTRL & 0x2))
+		CM_PER_EPWMSS2_CLKCTRL |= 0x2;
+	
+	pwmss_ctrl |= 0x04;
+	
+	while (!(PWMSS2.SYSCONFIG & 0x28))
+		PWMSS2.SYSCONFIG |= 0x28;
+	
+	while (!(PWMSS2.CLKSTATUS & 0x40))
+		PWMSS2.CLKCONFIGS |= 0x40;
 	
 	PWMSS2.EPWM_TBPRD = PERIOD_CYCLES;		// Periodo del ciclo PWM.
 	PWMSS2.EPWM_TBPHS = 0;				// Registro de fase de TB a 0.
@@ -312,7 +347,6 @@ void init_pwm() {
 	PWMSS2.EPWM_CMPCTL = 0x000;			// Load on CTR = 0, shadow mode.
 	PWMSS2.EPWM_AQCTLA = 0x012;			// Set on CNT = 0, Clear on CNT = CMPA.
 	PWMSS2.EPWM_AQCTLB = 0x102;			// Set on CNT = 0, Clear on CNT = CMPB.
-	PWMSS2.EPWM_TBCTL = 0x030 | 0xC000;		// Free Run
 	
 }
 
