@@ -64,6 +64,7 @@ struct pid_data {
 struct cycles_data {
 	int sum, loops;
 	short min, med, max;
+	int pwmss_ctrl;
 };
 												
 // Estructura del bloque de memoria compartida.
