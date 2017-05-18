@@ -203,11 +203,9 @@ void init_eqep() {
 	while (!(CM_PER_EPWMSS1_CLKCTRL & 0x2))
 		CM_PER_EPWMSS1_CLKCTRL |= 0x2;
 	
-	while (!(PWMSS1.SYSCONFIG & 0x28))
-		PWMSS1.SYSCONFIG |= 0x28;
+	PWMSS1.SYSCONFIG |= 0x28;
 	
-	while (!(PWMSS1.CLKSTATUS & 0x8))
-		PWMSS1.CLKCONFIG |= 0x8;	
+	PWMSS1.CLKCONFIG |= 0x8;	
 	
 	// Establece valores por defecto en modo de cuadratura.
 	PWMSS1.EQEP_QDECCTL = 0x00;
@@ -252,11 +250,9 @@ void init_eqep() {
 	while (!(CM_PER_EPWMSS2_CLKCTRL & 0x2))
 		CM_PER_EPWMSS2_CLKCTRL |= 0x2;
 	
-	while (!(PWMSS2.SYSCONFIG & 0x28))
-		PWMSS2.SYSCONFIG |= 0x28;
+	PWMSS2.SYSCONFIG |= 0x28;
 	
-	while (!(PWMSS2.CLKSTATUS & 0x8))
-		PWMSS2.CLKCONFIG |= 0x8;
+	PWMSS2.CLKCONFIG |= 0x8;
 	
 	// Establece valores por defecto en modo de cuadratura.
 	PWMSS2.EQEP_QDECCTL = 0x00;
@@ -309,11 +305,9 @@ void init_epwm() {
 	
 	pwmss_ctrl |= 0x02;
 	
-	while (!(PWMSS1.SYSCONFIG & 0x28))
-		PWMSS1.SYSCONFIG |= 0x28;
+	PWMSS1.SYSCONFIG |= 0x28;
 	
-	while (!(PWMSS1.CLKSTATUS & 0x40))
-		PWMSS1.CLKCONFIG |= 0x40;
+	PWMSS1.CLKCONFIG |= 0x40;
 	
 	PWMSS1.EPWM_TBPRD = PERIOD_CYCLES;		// Periodo del ciclo PWM.
 	PWMSS1.EPWM_TBPHS = 0;				// Registro de fase de TB a 0.
@@ -332,11 +326,9 @@ void init_epwm() {
 	
 	pwmss_ctrl |= 0x04;
 	
-	while (!(PWMSS2.SYSCONFIG & 0x28))
-		PWMSS2.SYSCONFIG |= 0x28;
+	PWMSS2.SYSCONFIG |= 0x28;
 	
-	while (!(PWMSS2.CLKSTATUS & 0x40))
-		PWMSS2.CLKCONFIG |= 0x40;
+	PWMSS2.CLKCONFIG |= 0x40;
 	
 	PWMSS2.EPWM_TBPRD = PERIOD_CYCLES;		// Periodo del ciclo PWM.
 	PWMSS2.EPWM_TBPHS = 0;				// Registro de fase de TB a 0.
