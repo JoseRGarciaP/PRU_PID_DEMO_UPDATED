@@ -64,7 +64,6 @@ struct pid_data {
 struct cycles_data {
 	int sum, loops;
 	short min, med, max;
-	int pwmss_ctrl;
 };
 												
 // Estructura del bloque de memoria compartida.
@@ -74,6 +73,7 @@ struct shared_mem {
 	volatile struct cycles_data cycles;
 	volatile struct pid_data pid1;
 	volatile struct pid_data pid2;
+	volatile int reg_pwmss_ctrl;
 };
 
 
@@ -198,7 +198,7 @@ void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2) 
 
 	// PID 2.
 	// Cálculo del error.
-	error = (pid2->setpoint - pid2->input);
+	error = (pid2->input - pid2->setpoint);
 
 	// Cálculo de la parte Proporcional.
 	p_f = (int)pid2->Kp_f * error;
@@ -211,7 +211,16 @@ void update_pid(volatile struct pid_data* pid1, volatile struct pid_data* pid2) 
 
 	// Suma total de la salida PID.
 	output_f = p_f + pid2->int_err;
-	pid2->output = output_f >> SHIFT;
+	output = output_f >> SHIFT;
+	
+	// Establecimieto de la salida PID, comprobación min/max de la salida.
+	if (output < pid2->min_output) {
+		pid2->output = pid2->min_output;
+	} else if (output > pid2->max_output) {
+		pid2->output = pid2->max_output;
+	} else {
+		pid2->output = output;
+	}
 	
 }
 
@@ -234,10 +243,6 @@ void write_output(volatile struct pid_data* pid1, volatile struct pid_data* pid2
 	}
 	
 	// Salida 2.
-	// Establecimieto de la salida PID, comprobación min/max de la salida.
-	if (pid2->output < pid2->min_output) pid2->output = pid2->min_output;
-	if (pid2->output > pid2->max_output) pid2->output = pid2->max_output;
-
 	// Establecimiento de los sentidos de giro.
 	if (pid2->output > 0) {
 		PWMSS2.EPWM_CMPA = pid2->output;		// L1 := PWM.	(Hacida adelante)
