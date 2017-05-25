@@ -127,11 +127,11 @@ void main(void) {
 		// Guarda los ciclos de escritura esperando al evento de cambio.
 		if (PWMSS1.EQEP_QFLG & 0x0800) {
 			PWMSS1.EQEP_QCLR |= 0x0800;
-			share_buff.pid1.input = get_enc_rpm1();
+			share_buff.pid[0].input = get_enc_rpm1();
 		}
 		if (PWMSS2.EQEP_QFLG & 0x0800) {
 			PWMSS2.EQEP_QCLR |= 0x0800;
-			share_buff.pid2.input = get_enc_rpm2();
+			share_buff.pid[1].input = get_enc_rpm2();
 		}
 		
 		// Comrprueba control automático para realizar el control.
@@ -167,10 +167,10 @@ void main(void) {
  * update_pid
  */
 void update_pid(volatile struct pid_data pid[]) {
-	int output_f, p_f, d_f;
-	short error, output;
+	int output_f, p_f;
+	short error, output, i;
 	
-	for (short i = 0; i < NPID; i++) {
+	for (i = 0; i < NPID; i++) {
 		
 		// Cálculo del error.
 		error = (pid[i].setpoint - pid[i].input);
@@ -180,9 +180,6 @@ void update_pid(volatile struct pid_data pid[]) {
 
 		// Cálculo de la parte Integral.
 		pid[i].int_err += ((int)pid[i].Ki_f * error) >> SHIFT;
-
-		// Cálculo de la parte Derivativa. QUITADA.
-		//d_f = (int) pid1->Kd_f * (pid1->output - pid1->last_output);
 
 		// Suma total de la salida PID.
 		output_f = p_f + pid[i].int_err;
@@ -237,9 +234,10 @@ void write_output(volatile struct pid_data pid[]) {
  */
 void init_pid(volatile struct pid_data pid[], volatile struct cycles_data* cycles) {
 	
+	short i;
 	// PID.
 	
-	for (short i = 0; i < NPID; i++) {
+	for (i = 0; i < NPID; i++) {
 		
 		pid[i].output = 0;
 		pid[i].input = 0;
