@@ -53,7 +53,7 @@ struct pid_data {
 
 struct cycles_data {
 	int sum, loops;
-	short min, med, max;
+	short min, med, max, desv, tc;
 };
 												
 // Estructura del bloque de memoria compartida.
@@ -514,6 +514,20 @@ void rpmsg_isr(volatile struct pid_data pid[], volatile struct cycles_data* cycl
 			break;
 		
 		// Comandos del conteo de ciclos.
+		
+		// Establece Tc.
+		case ('T'^'c'):					// 0x37
+			cycles->tc = rpunit->msg;
+			rpunit->msg = cycles->tc;
+			break;
+		// Leer Tc.
+		case ('r'^'T'^'c'):				// 0x45
+			rpunit->msg = cycles->tc;
+			break;
+		// Leer desviacion tipica del tiempo de ciclo.
+		case ('r'^'d'):					// 0x16
+			rpunit->msg = cycles->desv;
+			break;
 		// Leer número medio de ciclos del PID.
 		case ('m'^'e'^'d'):				// 0x6C
 			rpunit->msg = cycles->med;
@@ -530,7 +544,7 @@ void rpmsg_isr(volatile struct pid_data pid[], volatile struct cycles_data* cycl
 		case ('s'^'u'^'m'^'c'):			// 0x08
 			rpunit->msg = cycles->sum;
 			break;
-		// Leer total de bucles.
+		// Leer total de bucles para el conteo de datos.
 		case ('r'^'l'):					// 0x1E
 			rpunit->msg = cycles->loops;
 			break;
