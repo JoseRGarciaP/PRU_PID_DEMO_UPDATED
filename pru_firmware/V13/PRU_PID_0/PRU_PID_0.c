@@ -34,6 +34,7 @@
  //  Tweaks to the PID parameters were implemented by Gregory Raven.
 
 #include <stdint.h>
+#include <time.h>
 #include <pru_cfg.h>
 #include <pru_ctrl.h>
 #include <sys_pwmss.h>
@@ -66,7 +67,7 @@ struct pid_data {
 
 struct cycles_data {
 	int sum, loops;
-	short min, med, max;
+	short min, med, max, desv, tc;
 };
 												
 // Estructura del bloque de memoria compartida.
