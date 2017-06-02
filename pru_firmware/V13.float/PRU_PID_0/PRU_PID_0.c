@@ -98,6 +98,7 @@ volatile far struct shared_mem share_buff;         // Se define el símbolo shar
 */
 
 /* Declaración de funciones, prototipo */
+void fdelay(short cycles);		// Función de espera.
 void update_pid(volatile struct pid_data pid[]);    // Función de actualización del PID.
 void write_output(volatile struct pid_data pid[]);	// Función de escritura de PWMs.
 void init_pid(volatile struct pid_data pid[], volatile struct cycles_data* cycles);      // Función de inicialización del PID.
@@ -110,6 +111,7 @@ float get_enc_rpm2();
 void main(void) {
 	
 	short ncycles;
+	int delay;
 	
 	while (!(share_buff.init_flag == 1));		// Permiso de PRU 1 para empezar el PID
 	
@@ -157,11 +159,24 @@ void main(void) {
 
 		if (ncycles > share_buff.cycles.max) share_buff.cycles.max = ncycles;
 		if (ncycles < share_buff.cycles.min) share_buff.cycles.min = ncycles;
-		
-		__delay_cycles(share_buff.cycles.lenght - ncycles);
+
+		fdelay(ncycles);
 	}
 }
 
+/*
+ * fdelay
+ */
+void fdelay(short cycles){
+	short i, delay;
+	delay = share_buff.cycles.lenght - cycles;
+	for (i = 0; i < delay; i++){
+		
+		__delay_cycles(1);
+		
+	}
+	
+}
 
 /*
  * update_pid
