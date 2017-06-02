@@ -158,7 +158,7 @@ void main(void) {
 		if (ncycles > share_buff.cycles.max) share_buff.cycles.max = ncycles;
 		if (ncycles < share_buff.cycles.min) share_buff.cycles.min = ncycles;
 		
-		__delay_cycles(share_buff.cycles.tc - ncycles);
+		__delay_cycles(share_buff.cycles.lenght - ncycles);
 	}
 }
 
@@ -179,7 +179,7 @@ void update_pid(volatile struct pid_data pid[]) {
 		p = pid[i].Kp * error;
 
 		// Cálculo de la parte Integral.
-		pid[i].int_err += (pid[i].Ki * error * share_buff.cycles.tc);
+		pid[i].int_err += (pid[i].Ki * error * share_buff.cycles.lenght);
 
 		// Suma total de la salida PID.
 		output = p + pid[i].int_err;
