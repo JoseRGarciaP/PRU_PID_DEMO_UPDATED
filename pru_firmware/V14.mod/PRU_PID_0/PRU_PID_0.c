@@ -41,9 +41,6 @@
 #include "resource_table_empty.h"
 
 
-// Conversión "Float".
-//#define SHIFT    16			// antes 14
-
 // Número de PIDs
 #define NPID	2			// actualmente 2 PIDs.
 
@@ -92,11 +89,6 @@ volatile far struct shared_mem share_buff;         // Se define el símbolo shar
 #define SAMPLES_PER_SEC     24420	// Antiguo valor: 12
 #define SEC_PER_MIN         60
 
-/*
-#define LOOPS (*((volatile unsigned int *)0x4A301000))	// Defino la variable LOOP en el espacio de memoria de datos PRU RAM0.
-                                                        // De esta manera la otra PRU también tendrá esta variable sin necesidad
-														// de definirla en su código.
-*/
 
 /* Declaración de funciones, prototipo */
 void fdelay(short cycles, short lenght);		// Función de espera.
