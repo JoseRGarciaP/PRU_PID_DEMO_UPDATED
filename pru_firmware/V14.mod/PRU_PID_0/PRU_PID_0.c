@@ -61,20 +61,21 @@ struct pid_data {
 	int setpoint;
 	float input;
 	float int_err;
-	short output, last_output;
+	short output;
 	short min_output, max_output;
 };						// Estas estructuras son compartidas entre las PRUs,
 						// y así se forma la comunicación entre ambas.
 
 struct cycles_data {
 	int sum, loops;
-	short min, med, max, lenght;
+	short min, med, max;
 };
 												
 // Estructura del bloque de memoria compartida.
 struct shared_mem {
 	volatile char init_flag;
 	volatile char control;				// 'a' -> automático; 'm' -> manual.
+	volatile short lenght;
 	volatile struct cycles_data cycles;
 	volatile struct pid_data pid[NPID];
 };
@@ -98,9 +99,9 @@ volatile far struct shared_mem share_buff;         // Se define el símbolo shar
 */
 
 /* Declaración de funciones, prototipo */
-void fdelay(short cycles);		// Función de espera.
+void fdelay(short cycles, short lenght);		// Función de espera.
 void update_pid(volatile struct pid_data pid[]);    // Función de actualización del PID.
-void write_output(volatile struct pid_data pid[]);	// Función de escritura de PWMs.
+void write_output(short output, short max, short min);	// Función de escritura de PWMs.
 void init_pid(volatile struct pid_data pid[], volatile struct cycles_data* cycles);      // Función de inicialización del PID.
 float get_enc_rpm1();		// Obtención de la velocidad por el encoder.
 float get_enc_rpm2(); 
@@ -110,8 +111,7 @@ float get_enc_rpm2();
 */
 void main(void) {
 	
-	short ncycles;
-	int delay;
+	short cycles;
 	
 	while (!(share_buff.init_flag == 1));		// Permiso de PRU 1 para empezar el PID
 	
@@ -127,7 +127,7 @@ void main(void) {
 		// Inicio del conteo de ciclo del segmento de código.
 
 		PRU0_CTRL.CTRL_bit.CTR_EN = 1;               // Inicio del conteo.
-		ncycles = 0;
+		cycles = 0;
 		
 		// Lee Velocidad.
 		share_buff.pid[0].input = get_enc_rpm1();
@@ -141,35 +141,36 @@ void main(void) {
 			
 		}
 		
-		// Establece la velocidad PWM.
-		write_output(share_buff.pid);
+		// Establece la velocidad PWM. Por parametro para no contaminar el dato cuando se está escribiendo en el registro de salida.
+		write_output(share_buff.pid[0].output, share_buff.pid[0].max_output,share_buff.pid[0].min_output);
+		write_output(share_buff.pid[1].output, share_buff.pid[1].max_output,share_buff.pid[1].min_output);
 		
 		// Fin del conteo.
 		PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
-		ncycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;      // Copio el número de ciclos.
+		Cycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;      // Copio el número de ciclos.
 		PRU0_CTRL.CYCLE_bit.CYCLECOUNT = 0x0;		// Borro registro.
 		
 
 		if (share_buff.cycles.sum <= 2000000000)            // Evita el desbordamiento del dato sum (int).
 		{
-			share_buff.cycles.sum += ncycles;
+			share_buff.cycles.sum += cycles;
 			share_buff.cycles.med = share_buff.cycles.sum / (share_buff.cycles.loops + 1);	// Le sumo 1 porque share_buff.loops se actualiza después al final del bucle.
 			share_buff.cycles.loops += 1;
 		}
 
-		if (ncycles > share_buff.cycles.max) share_buff.cycles.max = ncycles;
-		if (ncycles < share_buff.cycles.min) share_buff.cycles.min = ncycles;
+		if (cycles > share_buff.cycles.max) share_buff.cycles.max = cycles;
+		if (cycles < share_buff.cycles.min) share_buff.cycles.min = cycles;
 
-		fdelay(ncycles);
+		fdelay(cycles,share_buff.lenght);
 	}
 }
 
 /*
  * fdelay
  */
-void fdelay(short cycles){
+void fdelay(short cycles, short lenght){
 	short i, delay;
-	delay = share_buff.cycles.lenght - cycles;
+	delay = lenght - cycles;
 	for (i = 0; i < delay; i++){
 		
 		__delay_cycles(1);
@@ -182,8 +183,8 @@ void fdelay(short cycles){
  * update_pid
  */
 void update_pid(volatile struct pid_data pid[]) {
-	float error, p;
-	short output, i;
+	float error, p, output;
+	short i;
 	
 	for (i = 0; i < NPID; i++) {
 		
@@ -213,32 +214,24 @@ void update_pid(volatile struct pid_data pid[]) {
 /*
  * write_output
  */
-void write_output(volatile struct pid_data pid[]) {
+void write_output(short output, short max, short min) {
 	
-	// Salida 1.
-	// Establecimiento de los sentidos de giro.
-	if (pid[0].output > 0) {
-		PWMSS1.EPWM_CMPA = pid[0].output;		// R1 := PWM.	(Hacida adelante)
-		PWMSS1.EPWM_CMPB = 0;							// R2 := 0.
-	} else if (pid[0].output < 0){
-		PWMSS1.EPWM_CMPA = 0;							// R1 := 0.		(Hacia atrás)
-		PWMSS1.EPWM_CMPB = - pid[0].output;	// R2 := PWM.
-	} else if (pid[0].output == 0) {
-		PWMSS1.EPWM_CMPA = 0;							// R1 := 0;		(Parado)
-		PWMSS1.EPWM_CMPB = 0;							// R2 := 0;
+	// Comprobacion rango de la salida.
+	if (output < min) {
+		output = min;
+	} else if (output > max) {
+		output = max;
 	}
-	
-	// Salida 2.
 	// Establecimiento de los sentidos de giro.
-	if (pid[1].output > 0) {
-		PWMSS2.EPWM_CMPA = pid[1].output;		// L1 := PWM.	(Hacida adelante)
-		PWMSS2.EPWM_CMPB = 0;							// L2 := 0.
-	} else if (pid[1].output < 0){
-		PWMSS2.EPWM_CMPA = 0;							// L1 := 0.		(Hacia atrás)
-		PWMSS2.EPWM_CMPB = - pid[1].output;	// L2 := PWM.
-	} else if (pid[1].output == 0) {
-		PWMSS2.EPWM_CMPA = 0;							// L1 := 0;		(Parado)
-		PWMSS2.EPWM_CMPB = 0;							// L2 := 0;
+	if (output > 0) {
+		PWMSS1.EPWM_CMPA = output;		// Hacida adelante
+		PWMSS1.EPWM_CMPB = 0;
+	} else if (output < 0){
+		PWMSS1.EPWM_CMPA = 0;		// Hacia atrás
+		PWMSS1.EPWM_CMPB = - output;
+	} else if (output == 0) {
+		PWMSS1.EPWM_CMPA = 0;			// Parado)
+		PWMSS1.EPWM_CMPB = 0;
 	}
 	
 }
@@ -270,7 +263,7 @@ void init_pid(volatile struct pid_data pid[], volatile struct cycles_data* cycle
 	pid[1].Ki = 900;
 	
 	// Cycles.
-	cycles->lenght = 10000;
+	share_buff.lenght = 10000;
 	
 	cycles->loops = 0;
 	cycles->min = SHRT_MAX;
