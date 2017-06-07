@@ -85,7 +85,7 @@ volatile far struct shared_mem share_buff;         // Se define el símbolo shar
                                                    // shared_mem, tipo volatile y far ( 16 bits superiores de la memoria)
 
 // Parámetros del Encoder de Cuadratura.
-#define TICKS_PER_REV       334 // es 4x 334 PREGUNTAR SI HAY QUE CAMBIARLO
+#define TICKS_PER_REV       1336 // es 4x334
 #define SAMPLES_PER_SEC     24420	// Antiguo valor: 12
 #define SEC_PER_MIN         60
 
@@ -237,6 +237,8 @@ void write_output(short output, short max, short min) {
  */
 void init_pid(volatile struct pid_data pid[], volatile struct cycles_data* cycles) {
 	
+	// COMO GLOBALES.
+	
 	short i;
 	// PID.
 	
@@ -282,8 +284,11 @@ float get_enc_rpm1() {
 		rpm = 0;
 	} else {
 		__R30 &= 0xFFFFFFFB;	// bit 2 apagado.
-		rpm = (float)( (int) PWMSS1.EQEP_QPOSLAT * SAMPLES_PER_SEC * SEC_PER_MIN) / TICKS_PER_REV;	// Se hace un typecast int explícito
-																							// para que recozca posiciones negativas.
+		if (PWMSS1.EQEP_QEPSTS & 0x20) {		// Hacia adelante
+			rpm = PWMSS1.EQEP_QPOSLAT * SAMPLES_PER_SEC * SEC_PER_MIN / (float)TICKS_PER_REV;
+		} else {					// Hacia atras
+			rpm = - PWMSS1.EQEP_QPOSLAT * SAMPLES_PER_SEC * SEC_PER_MIN / (float)TICKS_PER_REV;
+		}
 	}
 	
 	return rpm;
@@ -300,7 +305,11 @@ float get_enc_rpm2() {
 		rpm = 0;
 	} else {
 		__R30 &= 0xFFFFFFF7;	// bit 3 apagado.
-		rpm = (float)( (int) PWMSS2.EQEP_QPOSLAT * SAMPLES_PER_SEC * SEC_PER_MIN) / TICKS_PER_REV;
+		if (PWMSS2.EQEP_QEPSTS & 0x20) {		// Hacia adelante
+			rpm = PWMSS2.EQEP_QPOSLAT * SAMPLES_PER_SEC * SEC_PER_MIN / (float)TICKS_PER_REV;
+		} else {					// Hacia atras
+			rpm = - PWMSS2.EQEP_QPOSLAT * SAMPLES_PER_SEC * SEC_PER_MIN / (float)TICKS_PER_REV;
+		}
 	}
 	
 	return rpm;
