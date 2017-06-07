@@ -121,6 +121,10 @@ void main(void) {
 		PRU0_CTRL.CTRL_bit.CTR_EN = 1;               // Inicio del conteo.
 		cycles = 0;
 		
+		// ACTUALIZACION DE VARIABLES
+		// Poner los datos de las variables globales en nuevas variables locales para que los cambios no afecten.
+		// Y actualizar al inicio de cada loop 
+		
 		// Lee Velocidad.
 		share_buff.pid[0].input = get_enc_rpm1();
 		share_buff.pid[1].input = get_enc_rpm2();
