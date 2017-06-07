@@ -54,13 +54,14 @@ struct pid_data {
 
 struct cycles_data {
 	int sum, loops;
-	short min, med, max, lenght;
+	short min, med, max;
 };
 												
 // Estructura del bloque de memoria compartida.
 struct shared_mem {
 	volatile char init_flag;
 	volatile char control;				// 'a' -> automático; 'm' -> manual.
+	volatile short lenght;
 	volatile struct cycles_data cycles;
 	volatile struct pid_data pid[NPID];
 };
@@ -398,6 +399,10 @@ void rpmsg_isr(volatile struct pid_data pid[], volatile struct cycles_data* cycl
 							// al comando.
 							// Le siguen los bytes de los punteros del dato numerico del parámetro a cambiar, que es entero y 
 							// se cargan en rpunit->msg.
+	
+	// PONER LAS VARIABLES COMO GLOBALES, QUITAR LOS PASOS POR REFERENCIA
+	
+	
 	// Comprueba comando
 	switch(rpunit->cmd) {
 		
@@ -500,12 +505,12 @@ void rpmsg_isr(volatile struct pid_data pid[], volatile struct cycles_data* cycl
 		
 		// Establece Tc.
 		case ('T'^'c'):					// 0x37
-			cycles->lenght = rpunit->msg;
-			rpunit->msg = cycles->lenght;
+			share_buf.lenght = rpunit->msg;
+			rpunit->msg = share_buff.lenght;
 			break;
 		// Leer Tc.
 		case ('r'^'T'^'c'):				// 0x45
-			rpunit->msg = cycles->lenght;
+			rpunit->msg = share_buff.lenght;
 			break;
 		// Leer desviacion tipica del tiempo de ciclo.
 /*		case ('r'^'d'):					// 0x16
