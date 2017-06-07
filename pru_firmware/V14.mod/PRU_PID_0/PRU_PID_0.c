@@ -193,12 +193,12 @@ void update_pid(volatile struct pid_data pid[]) {
 		output = p + pid[i].int_err;
 		
 		// Establecimieto de la salida PID, comprobación min/max de la salida.
-		if (output < pid[i].min_output) {
+		if ((short)output < pid[i].min_output) {
 			pid[i].output = pid[i].min_output;
-		} else if (output > pid[i].max_output) {
+		} else if ((short)output > pid[i].max_output) {
 			pid[i].output = pid[i].max_output;
 		} else {
-			pid[i].output = output;
+			pid[i].output = (short)output;
 		}
 	}
 }
