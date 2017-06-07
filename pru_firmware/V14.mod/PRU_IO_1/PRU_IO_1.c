@@ -47,7 +47,7 @@ struct pid_data {
 	int setpoint;
 	float input;
 	float int_err;
-	short output, last_output;
+	short output;
 	short min_output, max_output;
 };							// Estas estructuras son compartidas entre las PRUs,
 							// y así se forma la comunicación entre ambas.
