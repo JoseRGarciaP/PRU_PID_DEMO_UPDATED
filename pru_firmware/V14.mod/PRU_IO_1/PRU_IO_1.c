@@ -505,7 +505,7 @@ void rpmsg_isr(struct pru_rpmsg_transport *transport, uint8_t *payload,
 		
 		// Establece Tc.
 		case ('T'^'c'):					// 0x37
-			share_buf.lenght = rpunit->msg;
+			share_buff.lenght = rpunit->msg;
 			rpunit->msg = share_buff.lenght;
 			break;
 		// Leer Tc.
