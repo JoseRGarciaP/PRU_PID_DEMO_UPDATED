@@ -145,9 +145,9 @@ volatile register uint32_t __R31;
 void init_eqep();                            // Inicialización del módulo eQEP, y relojes de PWMSS.
 void init_epwm();                             // Inicialización del módulo ePWM.
 void init_rpmsg(struct pru_rpmsg_transport* transport);   // Inicialización del bloque RPMsg.
-void rpmsg_interrupt(volatile struct pid_data pid[], volatile struct cycles_data* cycles, struct pru_rpmsg_transport *transport, uint8_t *payload,
+void rpmsg_interrupt(struct pru_rpmsg_transport *transport, uint8_t *payload,
         uint16_t src, uint16_t dst, uint16_t len);    // Comprobación de las interrupciones generadas por ARM.
-void rpmsg_isr(volatile struct pid_data pid[], volatile struct cycles_data* cycles, struct pru_rpmsg_transport *transport, uint8_t *payload,
+void rpmsg_isr(struct pru_rpmsg_transport *transport, uint8_t *payload,
         uint16_t src, uint16_t dst);                  // Servicio de la interrupción.
 void int_to_payload(uint8_t *payload, int data);      // Entero a dato de comunicación.
 unsigned int payload_to_int(uint8_t *payload);        // Dato de comunicación a entero.
@@ -187,7 +187,7 @@ void main(void) {
 	while (1) {
 		
 		// Obtiene los mensajes del espacio de usuario.
-		rpmsg_interrupt(share_buff.pid, &share_buff.cycles, &transport, payload, dst, src, len);
+		rpmsg_interrupt(&transport, payload, dst, src, len);
 		
 	}
 }
@@ -366,7 +366,7 @@ void init_rpmsg(struct pru_rpmsg_transport* transport) {
 /*
  * rpmsg_interrupt
  */
-void rpmsg_interrupt(volatile struct pid_data pid[], volatile struct cycles_data* cycles, struct pru_rpmsg_transport *transport, uint8_t *payload,
+void rpmsg_interrupt(struct pru_rpmsg_transport *transport, uint8_t *payload,
         uint16_t src, uint16_t dst, uint16_t len) {
 	
 	// Comprueba el bit 31 del registro R31 para ver si ARM ha mensajeado.
@@ -379,7 +379,7 @@ void rpmsg_interrupt(volatile struct pid_data pid[], volatile struct cycles_data
 		// Recibe los mensajes.
 		if(pru_rpmsg_receive(transport, &src, &dst, payload, &len) == PRU_RPMSG_SUCCESS){
 			// Servicio de la interrupción.
-			rpmsg_isr(pid, cycles, transport, payload, src, dst);
+			rpmsg_isr(transport, payload, src, dst);
 		}
 	}
 }
@@ -387,7 +387,7 @@ void rpmsg_interrupt(volatile struct pid_data pid[], volatile struct cycles_data
 /*
  * rpmsg_isr
  */
-void rpmsg_isr(volatile struct pid_data pid[], volatile struct cycles_data* cycles, struct pru_rpmsg_transport *transport, uint8_t *payload,
+void rpmsg_isr(struct pru_rpmsg_transport *transport, uint8_t *payload,
         uint16_t src, uint16_t dst) {
 	
 	struct rpmsg_unit* rpunit;
@@ -420,85 +420,85 @@ void rpmsg_isr(volatile struct pid_data pid[], volatile struct cycles_data* cycl
 		// Comandos del PID 1.
 		// Establece setpoint.
 		case ('s'^'p'^'d'):				// 0x67
-			pid[0].setpoint = rpunit->msg;
-			rpunit->msg = pid[0].setpoint;
+			share_buff.pid[0].setpoint = rpunit->msg;
+			rpunit->msg = share_buff.pid[0].setpoint;
 			break;
 		// Establece Kp.
 		case ('k'^'p'^'d'):				// 0x7F
-			pid[0].Kp = rpunit->msg;
-			rpunit->msg = pid[0].Kp;
+			share_buff.pid[0].Kp = rpunit->msg;
+			rpunit->msg = share_buff.pid[0].Kp;
 			break;
 		// Establece Ki.
 		case ('k'^'i'^'d'):				// 0x66
-			pid[0].Ki = rpunit->msg;
-			rpunit->msg = pid[0].Ki;
+			share_buff.pid[0].Ki = rpunit->msg;
+			rpunit->msg = share_buff.pid[0].Ki;
 			break;
 		// Establecer salida PWM.
 		case ('o'^'d'):					// 0x0B
-			pid[0].output = rpunit->msg;
-			rpunit->msg = pid[0].output;
+			share_buff.pid[0].output = rpunit->msg;
+			rpunit->msg = share_buff.pid[0].output;
 			break;
 		// Leer setpoint.
 		case ('r'^'s'^'d'):				// 0x65
-			rpunit->msg = pid[0].setpoint;
+			rpunit->msg = share_buff.pid[0].setpoint;
 			break;
 		// Leer Kp.
 		case ('r'^'k'^'p'^'d'):			// 0x0D
-			rpunit->msg = pid[0].Kp;
+			rpunit->msg = share_buff.pid[0].Kp;
 			break;
 		// Leer Ki.
 		case ('r'^'k'^'i'^'d'):			// 0x14
-			rpunit->msg = pid[0].Ki;
+			rpunit->msg = share_buff.pid[0].Ki;
 			break;
 		// Leer encoder RPM.
 		case ('r'^'e'^'d'):				// 0x73
-			rpunit->msg = pid[0].input;
+			rpunit->msg = share_buff.pid[0].input;
 			break;
 		// Leer salida PWM.
 		case ('r'^'o'^'d'):				// 0x79
-			rpunit->msg = pid[0].output;
+			rpunit->msg = share_buff.pid[0].output;
 			break;
 		
 		// Comandos del PID 2.
 		// Establece setpoint.	
 		case ('s'^'p'^'i'):				// 0x6A
-			pid[1].setpoint = rpunit->msg;
-			rpunit->msg = pid[1].setpoint;
+			share_buff.pid[1].setpoint = rpunit->msg;
+			rpunit->msg = share_buff.pid[1].setpoint;
 			break;
 		// Establece Kp.
 		case ('k'^'p'^'i'):				// 0x72
-			pid[1].Kp = rpunit->msg;
-			rpunit->msg = pid[1].Kp;
+			share_buff.pid[1].Kp = rpunit->msg;
+			rpunit->msg = share_buff.pid[1].Kp;
 			break;
 		// Establece Ki.
 		case ('k'^'i'^'i'^'q'):			// 0x1A
-			pid[1].Ki = rpunit->msg;
-			rpunit->msg = pid[1].Ki;
+			share_buff.pid[1].Ki = rpunit->msg;
+			rpunit->msg = share_buff.pid[1].Ki;
 			break;
 		// Establecer salida PWM.
 		case ('o'^'i'):					// 0x06
-			pid[1].output = rpunit->msg;
-			rpunit->msg = pid[1].output;
+			share_buff.pid[1].output = rpunit->msg;
+			rpunit->msg = share_buff.pid[1].output;
 			break;
 		// Leer setpoint.
 		case ('r'^'s'^'i'):				// 0x68
-			rpunit->msg = pid[1].setpoint;
+			rpunit->msg = share_buff.pid[1].setpoint;
 			break;
 		// Leer Kp.
 		case ('r'^'k'^'p'^'i'):			// 0x00
-			rpunit->msg = pid[1].Kp;
+			rpunit->msg = share_buff.pid[1].Kp;
 			break;
 		// Leer Ki.
 		case ('r'^'k'^'i'^'q'):			// 0x01
-			rpunit->msg = pid[1].Ki;
+			rpunit->msg = share_buff.pid[1].Ki;
 			break;
 		// Leer encoder RPM.
 		case ('r'^'e'^'i'):				// 0x7E
-			rpunit->msg = pid[1].input;
+			rpunit->msg = share_buff.pid[1].input;
 			break;
 		// Leer salida PWM.
 		case ('r'^'o'^'i'):				// 0x74
-			rpunit->msg = pid[1].output;
+			rpunit->msg = share_buff.pid[1].output;
 			break;
 		
 		// Comandos del conteo de ciclos.
@@ -518,29 +518,29 @@ void rpmsg_isr(volatile struct pid_data pid[], volatile struct cycles_data* cycl
 			break;
 */		// Leer número medio de ciclos del PID.
 		case ('m'^'e'^'d'):				// 0x6C
-			rpunit->msg = cycles->med;
+			rpunit->msg = share_buff.cycles.med;
 			break;
 		// Leer número maximo de ciclos del PID.
 		case ('m'^'x'):					// 0x15
-			rpunit->msg = cycles->max;
+			rpunit->msg = share_buff.cycles.max;
 			break;
 		// Leer número mínimo de ciclos del PID.
 		case ('m'^'n'):					// 0x03
-			rpunit->msg = cycles->min;
+			rpunit->msg = share_buff.cycles.min;
 			break;
 		// Leer suma total de los ciclos del PID.
 		case ('s'^'u'^'m'^'c'):			// 0x08
-			rpunit->msg = cycles->sum;
+			rpunit->msg = share_buff.cycles.sum;
 			break;
 		// Leer total de bucles para el conteo de datos.
 		case ('r'^'l'):					// 0x1E
-			rpunit->msg = cycles->loops;
+			rpunit->msg = share_buff.cycles.loops;
 			break;
 		// Resetea suma, media y loops para calcularlo de nuevo en ese momento.
 		case ('r'^'s'^'t'):				// 0x75
-			cycles->loops = 0;
-			cycles->med = 0;
-			cycles->sum = 0;
+			share_buff.cycles.loops = 0;
+			share_buff.cycles.med = 0;
+			share_buff.cycles.sum = 0;
 			rpunit->msg = 1;	// Comprobación en la respuesta para ver que se ha realizado.
 			break;
 		
