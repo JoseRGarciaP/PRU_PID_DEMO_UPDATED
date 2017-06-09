@@ -143,7 +143,7 @@ void main(void) {
 		
 		// Fin del conteo.
 		PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
-		Cycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;      // Copio el número de ciclos.
+		cycles = PRU0_CTRL.CYCLE_bit.CYCLECOUNT;      // Copio el número de ciclos.
 		PRU0_CTRL.CYCLE_bit.CYCLECOUNT = 0x0;		// Borro registro.
 		
 
@@ -191,7 +191,7 @@ void update_pid(volatile struct pid_data pid[]) {
 		p = pid[i].Kp * error;
 
 		// Cálculo de la parte Integral.
-		pid[i].int_err += (pid[i].Ki * error * share_buff.cycles.lenght);
+		pid[i].int_err += (pid[i].Ki * error * share_buff.lenght);
 
 		// Suma total de la salida PID.
 		output = p + pid[i].int_err;
