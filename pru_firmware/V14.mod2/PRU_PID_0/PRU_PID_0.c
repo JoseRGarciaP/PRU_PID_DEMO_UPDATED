@@ -91,8 +91,8 @@ volatile far struct shared_mem share_buff;         // Se define el símbolo shar
 
 
 /* Declaración de funciones, prototipo */
-void update_var(struct shared_mem *loop_pid);		// Funcion que actualiza las variables del exterior en cada bucle.
-void back_var(struct shared_mem loop_pid);		// Funcion que actualiza las variables del exterior en cada bucle.
+void update_var(volatile struct shared_mem *loop_pid);		// Funcion que actualiza las variables del exterior en cada bucle.
+void back_var(volatile struct shared_mem loop_pid);		// Funcion que actualiza las variables del exterior en cada bucle.
 void fdelay(short cycles, short lenght);		// Función de espera.
 void update_pid(volatile struct pid_data pid[]);    // Función de actualización del PID.
 void write_output(volatile struct pid_data pid[]);	// Función de escritura de PWMs.
@@ -170,7 +170,7 @@ void main(void) {
 /*
  * update_var
  */
-void update_var(struct shared_mem *loop_pid) {
+void update_var(volatile struct shared_mem *loop_pid) {
 	volatile struct shared_mem *ptr;
 	ptr = &share_buff;
 	loop_pid = ptr;
@@ -179,7 +179,7 @@ void update_var(struct shared_mem *loop_pid) {
 /*
  * back_var
  */
-void back_var(struct shared_mem *loop_pid) {
+void back_var(volatile struct shared_mem *loop_pid) {
 	share_buff = loop_pid;
 }
 
