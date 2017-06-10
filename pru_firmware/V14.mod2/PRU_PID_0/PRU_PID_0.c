@@ -305,7 +305,7 @@ void init_pid(volatile struct pid_data pid[], volatile struct cycles_data* cycle
 	
 	// Cycles.
 	share_buff.lenght = 2000000;
-	share_buff.tc = share_buff.lenght * 5e-9;
+	share_buff.tc = (float)share_buff.lenght * 5e-9;
 	
 	cycles->loops = 0;
 	cycles->min = SHRT_MAX;
