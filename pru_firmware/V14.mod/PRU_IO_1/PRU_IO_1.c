@@ -267,7 +267,7 @@ void init_eqep() {
 	
 	// Establece preescalares para el timer de captura EQEP y UPEVNT.
 	// Nota: La unidad de captura EQEP debe estar deshabilitada antes de cambiar los preescalares.
-	PWMSS1.EQEP_QCAPCTL = 0x0070;
+	PWMSS2.EQEP_QCAPCTL = 0x0070;
 	
 	// Habilita captura EQEP.
 	PWMSS2.EQEP_QCAPCTL |= 0x8000;
