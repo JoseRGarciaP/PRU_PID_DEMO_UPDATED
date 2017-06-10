@@ -61,7 +61,8 @@ struct cycles_data {
 struct shared_mem {
 	volatile char init_flag;
 	volatile char control;				// 'a' -> automático; 'm' -> manual.
-	volatile short lenght;
+	volatile int lenght;
+	volatile float tc;
 	volatile struct cycles_data cycles;
 	volatile struct pid_data pid[NPID];
 };
@@ -507,6 +508,7 @@ void rpmsg_isr(struct pru_rpmsg_transport *transport, uint8_t *payload,
 		case ('T'^'c'):					// 0x37
 			share_buff.lenght = rpunit->msg;
 			rpunit->msg = share_buff.lenght;
+			share_buff.tc = (float)share_buff.lenght * 5e-9;
 			break;
 		// Leer Tc.
 		case ('r'^'T'^'c'):				// 0x45
