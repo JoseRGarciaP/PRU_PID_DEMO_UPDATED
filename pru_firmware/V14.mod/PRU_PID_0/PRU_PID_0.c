@@ -91,6 +91,7 @@ volatile far struct shared_mem share_buff;         // Se define el símbolo shar
 
 
 /* Declaración de funciones, prototipo */
+void update_var(struct shared_mem *loop_pid);		// Funcion que actualiza las variables del exterior en cada bucle.
 void fdelay(short cycles, short lenght);		// Función de espera.
 void update_pid(volatile struct pid_data pid[]);    // Función de actualización del PID.
 void write_output(short output, short max, short min);	// Función de escritura de PWMs.
@@ -104,6 +105,8 @@ float get_enc_rpm2();
 void main(void) {
 	
 	short cycles;
+	struct shared_mem loop_pid;
+	
 	
 	while (!(share_buff.init_flag == 1));		// Permiso de PRU 1 para empezar el PID
 	
@@ -124,22 +127,23 @@ void main(void) {
 		// ACTUALIZACION DE VARIABLES
 		// Poner los datos de las variables globales en nuevas variables locales para que los cambios no afecten.
 		// Y actualizar al inicio de cada loop 
+		update_var(&loop_pid);
 		
 		// Lee Velocidad.
-		share_buff.pid[0].input = get_enc_rpm1();
-		share_buff.pid[1].input = get_enc_rpm2();
+		loop_pid.pid[0].input = get_enc_rpm1();
+		loop_pid.pid[1].input = get_enc_rpm2();
 		
 		// Comrprueba control automático para realizar el control.
-		if (share_buff.control == 'a') {
+		if (loop_pid.control == 'a') {
 			
 			// Actualiza PID.
-			update_pid(share_buff.pid);
+			update_pid(loop_pid.pid);
 			
 		}
 		
 		// Establece la velocidad PWM. Por parametro para no contaminar el dato cuando se está escribiendo en el registro de salida.
-		write_output(share_buff.pid[0].output, share_buff.pid[0].max_output,share_buff.pid[0].min_output);
-		write_output(share_buff.pid[1].output, share_buff.pid[1].max_output,share_buff.pid[1].min_output);
+		write_output(loop_pid.pid[0].output, loop_pid.pid[0].max_output, loop_pid.pid[0].min_output);
+		write_output(loop_pid.pid[1].output, loop_pid.pid[1].max_output, loop_pid.pid[1].min_output);
 		
 		// Fin del conteo.
 		PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
@@ -149,16 +153,32 @@ void main(void) {
 
 		if (share_buff.cycles.sum <= 2000000000)            // Evita el desbordamiento del dato sum (int).
 		{
-			share_buff.cycles.sum += cycles;
-			share_buff.cycles.med = share_buff.cycles.sum / (share_buff.cycles.loops + 1);	// Le sumo 1 porque share_buff.loops se actualiza después al final del bucle.
-			share_buff.cycles.loops += 1;
+			loop_pid.cycles.sum += cycles;
+			loop_pid.cycles.med = loop_pid.cycles.sum / (loop_pid.cycles.loops + 1);	// Le sumo 1 porque share_buff.loops se actualiza después al final del bucle.
+			loop_pid.cycles.loops += 1;
 		}
 
-		if (cycles > share_buff.cycles.max) share_buff.cycles.max = cycles;
-		if (cycles < share_buff.cycles.min) share_buff.cycles.min = cycles;
+		if (cycles > loop_pid.cycles.max) loop_pid.cycles.max = cycles;
+		if (cycles < loop_pid.cycles.min) loop_pid.cycles.min = cycles;
+		
+		back_var(&loop_pid);
 
-		fdelay(cycles,share_buff.lenght);
+		fdelay(cycles,loop_pid.lenght);
 	}
+}
+
+/*
+ * update_var
+ */
+void update_var(struct shared_mem *loop_pid) {
+	loop_pid = share_buff;
+}
+
+/*
+ * back_var
+ */
+void back_var(struct shared_mem *loop_pid) {
+	share_buff = loop_pid;
 }
 
 /*
