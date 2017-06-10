@@ -248,15 +248,28 @@ void write_output(volatile struct pid_data pid[]) {
 			pid[i].output = pid[i].max_output;
 		}
 		// Establecimiento de los sentidos de giro.
-		if (pid[i].output > 0) {
-			PWMSS1.EPWM_CMPA = pid[i].output;		// Hacida adelante
-			PWMSS1.EPWM_CMPB = 0;
-		} else if (pid[i].output < 0){
-			PWMSS1.EPWM_CMPA = 0;		// Hacia atrás
-			PWMSS1.EPWM_CMPB = - pid[i].output;
-		} else if (pid[i].output == 0) {
-			PWMSS1.EPWM_CMPA = 0;			// Parado)
-			PWMSS1.EPWM_CMPB = 0;
+		if (i == 0) {
+			if (pid[0].output > 0) {
+				PWMSS1.EPWM_CMPA = pid[0].output;		// Hacida adelante
+				PWMSS1.EPWM_CMPB = 0;
+			} else if (pid[0].output < 0){
+				PWMSS1.EPWM_CMPA = 0;		// Hacia atrás
+				PWMSS1.EPWM_CMPB = - pid[0].output;
+			} else if (pid[0].output == 0) {
+				PWMSS1.EPWM_CMPA = 0;			// Parado
+				PWMSS1.EPWM_CMPB = 0;
+			}
+		} else if (i == 1) {
+			if (pid[1].output > 0) {
+				PWMSS2.EPWM_CMPA = pid[1].output;		// Hacida adelante
+				PWMSS2.EPWM_CMPB = 0;
+			} else if (pid[1].output < 0){
+				PWMSS2.EPWM_CMPA = 0;		// Hacia atrás
+				PWMSS2.EPWM_CMPB = - pid[1].output;
+			} else if (pid[1].output == 0) {
+				PWMSS2.EPWM_CMPA = 0;			// Parado
+				PWMSS2.EPWM_CMPB = 0;
+			}
 		}
 	}
 }
