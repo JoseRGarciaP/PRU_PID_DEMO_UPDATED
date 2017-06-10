@@ -73,6 +73,7 @@ struct shared_mem {
 	volatile char init_flag;
 	volatile char control;				// 'a' -> automático; 'm' -> manual.
 	volatile int lenght;
+	volatile float tc;
 	volatile struct cycles_data cycles;
 	volatile struct pid_data pid[NPID];
 };
@@ -94,7 +95,7 @@ volatile far struct shared_mem share_buff;         // Se define el símbolo shar
 void update_var(volatile struct shared_mem *loop_pid);		// Funcion que actualiza las variables del exterior en cada bucle.
 void back_var(volatile struct shared_mem loop_pid);		// Funcion que actualiza las variables del exterior en cada bucle.
 void fdelay(short cycles, short lenght);		// Función de espera.
-void update_pid(volatile struct pid_data pid[]);    // Función de actualización del PID.
+void update_pid(volatile struct pid_data pid[], volatile float tc);    // Función de actualización del PID.
 void write_output(volatile struct pid_data pid[]);	// Función de escritura de PWMs.
 void init_pid(volatile struct pid_data pid[], volatile struct cycles_data* cycles);      // Función de inicialización del PID.
 float get_enc_rpm1();		// Obtención de la velocidad por el encoder.
@@ -138,7 +139,7 @@ void main(void) {
 		if (share_buff.control == 'a') {
 			
 			// Actualiza PID.
-			update_pid(share_buff.pid);
+			update_pid(share_buff.pid, share_buff.tc);
 			
 		}
 		
@@ -200,7 +201,7 @@ void fdelay(short cycles, short lenght){
 /*
  * update_pid
  */
-void update_pid(volatile struct pid_data pid[]) {
+void update_pid(volatile struct pid_data pid[], volatile float tc) {
 	float error, p, output;
 	short i;
 	
@@ -213,7 +214,7 @@ void update_pid(volatile struct pid_data pid[]) {
 		p = pid[i].Kp * error;
 
 		// Cálculo de la parte Integral.
-		pid[i].int_err += (pid[i].Ki * error * share_buff.lenght);
+		pid[i].int_err += (pid[i].Ki * error * tc);
 		
 		if (pid[i].int_err < pid[i].min_output) {
 			pid[i].int_err = pid[i].min_output;
@@ -304,6 +305,7 @@ void init_pid(volatile struct pid_data pid[], volatile struct cycles_data* cycle
 	
 	// Cycles.
 	share_buff.lenght = 2000000;
+	share_buff.tc = share_buff.lenght * 5e-9;
 	
 	cycles->loops = 0;
 	cycles->min = SHRT_MAX;
