@@ -179,7 +179,7 @@ void update_var(volatile struct shared_mem *loop_pid) {
 /*
  * back_var
  */
-void back_var(volatile struct shared_mem *loop_pid) {
+void back_var(volatile struct shared_mem loop_pid) {
 	share_buff = loop_pid;
 }
 
@@ -238,7 +238,7 @@ void update_pid(volatile struct pid_data pid[]) {
 /*
  * write_output
  */
-void write_output(short output, short max, short min) {
+void write_output(volatile struct pid_data pid[]) {
 	short i;
 	for (i = 0; i < NPID; i++) {
 		// Comprobacion rango de la salida.
@@ -290,7 +290,7 @@ void init_pid(volatile struct pid_data pid[], volatile struct cycles_data* cycle
 	pid[1].Ki = 900;
 	
 	// Cycles.
-	share_buff.lenght = 10000;
+	share_buff.lenght = 2000000;
 	
 	cycles->loops = 0;
 	cycles->min = SHRT_MAX;
