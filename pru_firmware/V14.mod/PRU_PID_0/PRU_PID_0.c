@@ -86,16 +86,16 @@ volatile far struct shared_mem share_buff;         // Se define el símbolo shar
 
 // Parámetros del Encoder de Cuadratura.
 #define TICKS_PER_REV       1336 // es 4x334
-#define SAMPLES_PER_SEC     24420	// Antiguo valor: 12
+#define SAMPLES_PER_SEC     250	// Antiguo valor: 12
 #define SEC_PER_MIN         60
 
 
 /* Declaración de funciones, prototipo */
 void update_var(struct shared_mem *loop_pid);		// Funcion que actualiza las variables del exterior en cada bucle.
-void back_var(struct shared_mem *loop_pid);		// Funcion que actualiza las variables del exterior en cada bucle.
+void back_var(struct shared_mem loop_pid);		// Funcion que actualiza las variables del exterior en cada bucle.
 void fdelay(short cycles, short lenght);		// Función de espera.
 void update_pid(volatile struct pid_data pid[]);    // Función de actualización del PID.
-void write_output(short output, short max, short min);	// Función de escritura de PWMs.
+void write_output(volatile struct pid_data pid[]);	// Función de escritura de PWMs.
 void init_pid(volatile struct pid_data pid[], volatile struct cycles_data* cycles);      // Función de inicialización del PID.
 float get_enc_rpm1();		// Obtención de la velocidad por el encoder.
 float get_enc_rpm2(); 
@@ -143,8 +143,7 @@ void main(void) {
 		}
 		
 		// Establece la velocidad PWM. Por parametro para no contaminar el dato cuando se está escribiendo en el registro de salida.
-		write_output(loop_pid.pid[0].output, loop_pid.pid[0].max_output, loop_pid.pid[0].min_output);
-		write_output(loop_pid.pid[1].output, loop_pid.pid[1].max_output, loop_pid.pid[1].min_output);
+		write_output(loop_pid.pid);
 		
 		// Fin del conteo.
 		PRU0_CTRL.CTRL_bit.CTR_EN = 0;                // Se detiene el contador.
@@ -162,7 +161,7 @@ void main(void) {
 		if (cycles > loop_pid.cycles.max) loop_pid.cycles.max = cycles;
 		if (cycles < loop_pid.cycles.min) loop_pid.cycles.min = cycles;
 		
-		back_var(&loop_pid);
+		back_var(loop_pid);
 
 		fdelay(cycles,loop_pid.lenght);
 	}
@@ -172,14 +171,16 @@ void main(void) {
  * update_var
  */
 void update_var(struct shared_mem *loop_pid) {
-	loop_pid = *share_buff;
+	volatile struct shared_mem *ptr;
+	ptr = &share_buff;
+	loop_pid = ptr;
 }
 
 /*
  * back_var
  */
 void back_var(struct shared_mem *loop_pid) {
-	*share_buff = loop_pid;
+	share_buff = loop_pid;
 }
 
 /*
@@ -232,25 +233,26 @@ void update_pid(volatile struct pid_data pid[]) {
  * write_output
  */
 void write_output(short output, short max, short min) {
-	
-	// Comprobacion rango de la salida.
-	if (output < min) {
-		output = min;
-	} else if (output > max) {
-		output = max;
+	short i;
+	for (i = 0; i < NPID; i++) {
+		// Comprobacion rango de la salida.
+		if (pid[i].output < pid[i].min_output) {
+			pid[i].output = pid[i].min_output;
+		} else if (pid[i].output > pid[i].max_output) {
+			pid[i].output = pid[i].max_output;
+		}
+		// Establecimiento de los sentidos de giro.
+		if (pid[i].output > 0) {
+			PWMSS1.EPWM_CMPA = pid[i].output;		// Hacida adelante
+			PWMSS1.EPWM_CMPB = 0;
+		} else if (pid[i].output < 0){
+			PWMSS1.EPWM_CMPA = 0;		// Hacia atrás
+			PWMSS1.EPWM_CMPB = - pid[i].output;
+		} else if (pid[i].output == 0) {
+			PWMSS1.EPWM_CMPA = 0;			// Parado)
+			PWMSS1.EPWM_CMPB = 0;
+		}
 	}
-	// Establecimiento de los sentidos de giro.
-	if (output > 0) {
-		PWMSS1.EPWM_CMPA = output;		// Hacida adelante
-		PWMSS1.EPWM_CMPB = 0;
-	} else if (output < 0){
-		PWMSS1.EPWM_CMPA = 0;		// Hacia atrás
-		PWMSS1.EPWM_CMPB = - output;
-	} else if (output == 0) {
-		PWMSS1.EPWM_CMPA = 0;			// Parado)
-		PWMSS1.EPWM_CMPB = 0;
-	}
-	
 }
 
 /*
