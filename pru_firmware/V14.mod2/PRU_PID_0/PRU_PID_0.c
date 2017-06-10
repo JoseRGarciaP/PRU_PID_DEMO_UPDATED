@@ -296,10 +296,10 @@ void init_pid(volatile struct pid_data pid[], volatile struct cycles_data* cycle
 		pid[i].setpoint = 0;
 	}
 	
-	pid[0].Kp = 500;	// 500
+	pid[0].Kp = 5;	// 500
 	pid[0].Ki = 900;	// 200
 	
-	pid[1].Kp = 500;
+	pid[1].Kp = 5;
 	pid[1].Ki = 900;
 	
 	// Cycles.
