@@ -72,7 +72,7 @@ struct cycles_data {
 struct shared_mem {
 	volatile char init_flag;
 	volatile char control;				// 'a' -> automático; 'm' -> manual.
-	volatile short lenght;
+	volatile int lenght;
 	volatile struct cycles_data cycles;
 	volatile struct pid_data pid[NPID];
 };
