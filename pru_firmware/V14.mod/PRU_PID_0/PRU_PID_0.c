@@ -214,6 +214,12 @@ void update_pid(volatile struct pid_data pid[]) {
 
 		// Cálculo de la parte Integral.
 		pid[i].int_err += (pid[i].Ki * error * share_buff.lenght);
+		
+		if (pid[i].int_err < pid[i].min_output) {
+			pid[i].int_err = pid[i].min_output;
+		} else if (pid[i].int_err > pid[i].max_output) {
+			pid[i].int_err = pid[i].max_output;
+		}
 
 		// Suma total de la salida PID.
 		output = p + pid[i].int_err;
