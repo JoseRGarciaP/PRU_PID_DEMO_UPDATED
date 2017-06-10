@@ -328,11 +328,7 @@ float get_enc_rpm1() {
 		rpm = 0;
 	} else {
 		__R30 &= 0xFFFFFFFB;	// bit 2 apagado.
-		if (PWMSS1.EQEP_QEPSTS & 0x20) {		// Hacia adelante
-			rpm = ((unsigned int)PWMSS1.EQEP_QPOSLAT) * SAMPLES_PER_SEC * SEC_PER_MIN / (float)TICKS_PER_REV;
-		} else {					// Hacia atras
-			rpm = - (UINT_MAX - (unsigned int)PWMSS1.EQEP_QPOSLAT + 1) * SAMPLES_PER_SEC * SEC_PER_MIN / (float)TICKS_PER_REV;
-		}
+		rpm = (int)PWMSS1.EQEP_QPOSLAT * SAMPLES_PER_SEC * SEC_PER_MIN / (float)TICKS_PER_REV;
 	}
 	
 	return rpm;
@@ -349,11 +345,7 @@ float get_enc_rpm2() {
 		rpm = 0;
 	} else {
 		__R30 &= 0xFFFFFFF7;	// bit 3 apagado.
-		if (PWMSS2.EQEP_QEPSTS & 0x20) {		// Hacia adelante
-			rpm = ((unsigned int)PWMSS2.EQEP_QPOSLAT) * SAMPLES_PER_SEC * SEC_PER_MIN / (float)TICKS_PER_REV;
-		} else {					// Hacia atras
-			rpm = - (UINT_MAX - (unsigned int)PWMSS2.EQEP_QPOSLAT + 1) * SAMPLES_PER_SEC * SEC_PER_MIN / (float)TICKS_PER_REV;
-		}
+		rpm = (int)PWMSS2.EQEP_QPOSLAT * SAMPLES_PER_SEC * SEC_PER_MIN / (float)TICKS_PER_REV;
 	}
 	
 	return rpm;
