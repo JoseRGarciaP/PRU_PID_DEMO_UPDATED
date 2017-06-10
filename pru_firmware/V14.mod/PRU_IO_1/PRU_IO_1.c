@@ -112,8 +112,8 @@ volatile register uint32_t __R31;
 // Configuración del módulo eQEP.
 
 // Parámetros del Encoder de Cuadratura.
-#define TICKS_PER_REV       334 
-#define SAMPLES_PER_SEC     24420
+#define TICKS_PER_REV       1336 
+#define SAMPLES_PER_SEC     250
 #define SEC_PER_MIN         60
 
 // Configuración RPMsg.
@@ -239,7 +239,7 @@ void init_eqep() {
 	
 	// Establece el periodo de conteo del timer de la unidad.
 	// QUPRD = Period * 100MHz.
-	PWMSS1.EQEP_QUPRD_bit.QUPRD = 0x00000FFF;	// Nuevo valor (); Antiguo (~1s/24420) @ 100MHz
+	PWMSS1.EQEP_QUPRD_bit.QUPRD = 0x00061A80;	// Nuevo valor (1s/250); Antiguo (~1s/12) @ 100MHz
 	
 	// Borra todos los bits de interrupción.
 	PWMSS1.EQEP_QCLR = 0xFFFF;
@@ -286,7 +286,7 @@ void init_eqep() {
 	
 	// Establece el periodo de conteo del timer de la unidad.
 	// QUPRD = Period * 100MHz.
-	PWMSS2.EQEP_QUPRD_bit.QUPRD = 0x00000FFF;	// Nuevo valor (~1s/24420); Antiguo (~1s/24420) @ 100MHz
+	PWMSS2.EQEP_QUPRD_bit.QUPRD = 0x00061A80;	// Nuevo valor (~1s/250); Antiguo (~1s/12) @ 100MHz
 	
 	// Borra todos los bits de interrupción.
 	PWMSS2.EQEP_QCLR = 0xFFFF;
