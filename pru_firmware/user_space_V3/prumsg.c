@@ -10,7 +10,7 @@
 int main (int argc, char *argv[]) {
 	
 	int fd, wr, rd, idx, valorEntrada, valorSalida;
-	char comando[];
+	char comando[5];
 	char file[80];
 	char msg_buffer[RPMSG_BUF_SIZE];
 	char regreso[RPMSG_BUF_SIZE];
@@ -21,7 +21,7 @@ int main (int argc, char *argv[]) {
 		fd = open(file, O_RDWR);
 	} while (fd < 0);
 
-	memset(msg_buffer, '/0', RPMSG_BUF_SIZE);
+	memset(msg_buffer, '\0', RPMSG_BUF_SIZE);
 	
 	printf("Introduce comando: \n");
 	printf("'FIN' para acabar \n");
@@ -35,7 +35,7 @@ int main (int argc, char *argv[]) {
 		for (idx = 0; idx < strlen(comando); idx++)
 		msg_buffer[0] ^= comando[idx];
 		
-		msg_buffr[1] = valorEntrada & 0x000000FF;
+		msg_buffer[1] = valorEntrada & 0x000000FF;
 		msg_buffer[2] = (valorEntrada & 0x0000FF00) >> 0x08;
 		msg_buffer[3] = (valorEntrada & 0x00FF0000) >> 0x10;
 		msg_buffer[4] = valorEntrada >> 0x18;
@@ -45,7 +45,7 @@ int main (int argc, char *argv[]) {
 		memset(msg_buffer, '\0', RPMSG_BUF_SIZE);
 		memset(regreso, '\0', RPMSG_BUF_SIZE);
 		
-		rd = read(fd, msg_buff, 4);
+		rd = read(fd, msg_buffer, 4);
 		strcpy(regreso, msg_buffer);
 		
 		if(rd < 4){
@@ -55,7 +55,7 @@ int main (int argc, char *argv[]) {
 			
 			while(cont < 4){
 				
-				rd = read(fd, msg_buff, 4 - cont);
+				rd = read(fd, msg_buffer, 4 - cont);
 				strcat(regreso, msg_buffer);
 				cont += rd;
 				
