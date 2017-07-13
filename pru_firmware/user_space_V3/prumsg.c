@@ -66,6 +66,8 @@ int main (int argc, char *argv[]) {
 		
 		printf("El valor de %s es: %i\n",comando, valorSalida);
 		
+		memset(msg_buffer, '\0', RPMSG_BUF_SIZE);
+		
 		printf("Introduce comando: \n");
 		printf("'FIN' para acabar \n");
 		scanf("%s", comando);
